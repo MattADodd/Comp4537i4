@@ -1,53 +1,92 @@
 const express = require("express");
-const db = require("../modules/dbHandler.js"); // Import the database handler module
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+const db = require("../modules/dbHandler.js"); // Database module
 const app = express();
 const PORT = 3000;
+require("dotenv").config();
+const SECRET_KEY = process.env.JWT_SECRET;
 
-app.use(express.json()); // Middleware to parse JSON request bodies
+app.use(express.json()); // Parse JSON request bodies
+app.use(cookieParser()); // Parse cookies
 
-let tableCreating = false;
+// Ensure the Users table exists
+db.query(CREATE_USERS_TABLE).then(() => {
+  console.log("Users table is ready.");
+}).catch(err => console.error("Error creating Users table:", err));
 
-// Middleware to check if the Patients table exists, create it if not
-app.use(async (req, res, next) => {
+// Middleware: Verify JWT token and track API usage
+const authenticateUser = async (req, res, next) => {
+  const token = req.cookies.token;
+  if (!token) return res.status(401).json({ error: "Unauthorized" });
+
   try {
-    const results = await db.query(GET_TABLE);
-    if (results.length === 0 && !tableCreating) {
-      tableCreating = true;
-      await db.query(CREATE_TABLE);
-      console.log("Table Patients created with InnoDB engine.");
-      tableCreating = false;
+    const decoded = jwt.verify(token, SECRET_KEY);
+    req.user = decoded;
+
+    // Check API call usage
+    const [user] = await db.query("SELECT api_calls FROM Users WHERE id = ?", [decoded.id]);
+    if (!user) return res.status(401).json({ error: "User not found" });
+
+    if (user.api_calls >= 20) {
+      res.setHeader("X-API-Warning", "API limit reached");
+    } else {
+      await db.query("UPDATE Users SET api_calls = api_calls + 1 WHERE id = ?", [decoded.id]);
     }
+
     next();
-  } catch (error) {
-    console.error("Error checking table existence:", error);
-    res.status(500).json({ error: messages.dbError });
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+};
+
+// **User Registration**
+app.post("/register", async (req, res) => {
+  const { firstName, email, password } = req.body;
+  if (!firstName || !email || !password) return res.status(400).json({ error: "All fields required" });
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await db.query("INSERT INTO Users (firstName, email, password) VALUES (?, ?, ?)", [firstName, email, hashedPassword]);
+    res.status(201).json({ message: "User registered successfully" });
+  } catch (err) {
+    res.status(400).json({ error: "Email already in use" });
   }
 });
 
-// Enable CORS
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type");
-  if (req.method === "OPTIONS") return res.sendStatus(204);
-  next();
+// **User Login**
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: "All fields required" });
+
+  try {
+    const [user] = await db.query("SELECT * FROM Users WHERE email = ?", [email]);
+    if (!user) return res.status(401).json({ error: "Invalid credentials" });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ error: "Invalid credentials" });
+
+    const token = jwt.sign({ id: user.id, email: user.email }, SECRET_KEY, { expiresIn: "1h" });
+    res.cookie("token", token, { httpOnly: true, secure: false });
+    res.json({ message: "Login successful" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
-// GET route to execute SELECT queries
-app.get("/", async (req, res) => {
+// **Protected Route (Example API Call)**
+app.get("/data", authenticateUser, async (req, res) => {
+  res.json({ message: "Here is your protected data", user: req.user });
 });
 
-// POST route to insert multiple patients or execute a raw query
-app.post("/", async (req, res) => {
-  
+// **Logout**
+app.post("/logout", (req, res) => {
+  res.clearCookie("token");
+  res.json({ message: "Logged out successfully" });
 });
 
-// Handle 404 for unrecognized routes
-app.use((req, res) => {
-  res.status(404).json({ error: messages.routeNotFound });
-});
-
-// Start the Express server
+// **Start Server**
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
