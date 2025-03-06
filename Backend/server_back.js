@@ -1,20 +1,9 @@
 const express = require("express");
 const db = require("../modules/dbHandler.js"); // Import the database handler module
-const { messages } = require("../lang/messages/en/messages.js");
-
 const app = express();
 const PORT = 3000;
 
 app.use(express.json()); // Middleware to parse JSON request bodies
-
-const GET_TABLE = "SHOW TABLES LIKE 'Patients'";
-const CREATE_TABLE = `
-  CREATE TABLE Patients (
-    id INT(11) AUTO_INCREMENT PRIMARY KEY,  
-    name VARCHAR(100) NOT NULL,             
-    dateOfBirth DATE NOT NULL               
-  ) ENGINE=InnoDB;                          
-`;
 
 let tableCreating = false;
 
@@ -45,47 +34,12 @@ app.use((req, res, next) => {
 });
 
 // GET route to execute SELECT queries
-app.get("/api/v1/sql/:query", async (req, res) => {
-  const sqlQuery = decodeURIComponent(req.params.query);
-  if (!sqlQuery.toUpperCase().startsWith("SELECT")) {
-    return res.status(404).json({ error: messages.selectOnly });
-  }
-  try {
-    const results = await db.query(sqlQuery);
-    res.status(200).json(results);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+app.get("/", async (req, res) => {
 });
 
 // POST route to insert multiple patients or execute a raw query
-app.post("/api/v1/sql/", async (req, res) => {
-  try {
-    const patients = req.body;
-    if (!Array.isArray(patients) || !patients.every(p => p.name && p.dateOfBirth)) {
-      if (patients.query) {
-        await db.query(patients.query);
-        return res.status(201).json({ message: messages.success });
-      }
-      return res.status(400).json({ error: "Invalid patient data." });
-    }
-    
-    const values = patients.flatMap(p => [p.name, p.dateOfBirth]);
-    const placeholders = patients.map(() => "(?, ?)").join(", ");
-    const sql = `INSERT INTO Patients (name, dateOfBirth) VALUES ${placeholders}`;
-    
-    const result = await db.query(sql, values);
-    const insertedIdsStart = result.insertId;
-    const insertedPatients = patients.map((p, index) => ({
-      id: insertedIdsStart + index,
-      name: p.name,
-      dateOfBirth: p.dateOfBirth,
-    }));
-    
-    res.status(201).json({ message: messages.success, patients: insertedPatients });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+app.post("/", async (req, res) => {
+  
 });
 
 // Handle 404 for unrecognized routes
