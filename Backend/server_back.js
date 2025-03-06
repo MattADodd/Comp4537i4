@@ -11,6 +11,20 @@ const SECRET_KEY = process.env.JWT_SECRET;
 app.use(express.json()); // Parse JSON request bodies
 app.use(cookieParser()); // Parse cookies
 
+
+// SQL Queries
+const CREATE_USERS_TABLE = `
+  CREATE TABLE IF NOT EXISTS Users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    firstName VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    api_calls INT DEFAULT 0
+  ) ENGINE=InnoDB;
+`;
+
+
+
 // Ensure the Users table exists
 db.query(CREATE_USERS_TABLE).then(() => {
   console.log("Users table is ready.");
