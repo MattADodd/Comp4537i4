@@ -15,53 +15,53 @@ app.use(express.json());
 app.use(cookieParser()); 
 
 // Create Users table if not exists
-const CREATE_USERS_TABLE = `
-  CREATE TABLE IF NOT EXISTS Users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    firstName VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    api_calls INT DEFAULT 0,
-    is_admin BOOLEAN DEFAULT FALSE,
-    reset_token VARCHAR(255),
-    reset_token_expiry DATETIME
-  ) ENGINE=InnoDB;
-`;
+// const CREATE_USERS_TABLE = `
+//   CREATE TABLE IF NOT EXISTS Users (
+//     id INT AUTO_INCREMENT PRIMARY KEY,
+//     firstName VARCHAR(100) NOT NULL,
+//     email VARCHAR(100) UNIQUE NOT NULL,
+//     password VARCHAR(255) NOT NULL,
+//     api_calls INT DEFAULT 0,
+//     is_admin BOOLEAN DEFAULT FALSE,
+//     reset_token VARCHAR(255),
+//     reset_token_expiry DATETIME
+//   ) ENGINE=InnoDB;
+// `;
 
-db.query(CREATE_USERS_TABLE).then(() => {
-  console.log("Users table is ready.");
-}).catch(err => console.error("Error creating Users table:", err));
+// db.query(CREATE_USERS_TABLE).then(() => {
+//   console.log("Users table is ready.");
+// }).catch(err => console.error("Error creating Users table:", err));
 
 // Middleware: Verify JWT and track API usage
 const authenticateUser = async (req, res, next) => {
-  const token = req.cookies.token;
-  if (!token) return res.status(401).json({ error: "Unauthorized" });
+  // const token = req.cookies.token;
+  // if (!token) return res.status(401).json({ error: "Unauthorized" });
 
-  try {
-    const decoded = jwt.verify(token, SECRET_KEY);
-    req.user = decoded;
+  // try {
+  //   const decoded = jwt.verify(token, SECRET_KEY);
+  //   req.user = decoded;
 
-    const [user] = await db.query("SELECT api_calls FROM Users WHERE id = ?", [decoded.id]);
-    if (!user) return res.status(401).json({ error: "User not found" });
+  //   const [user] = await db.query("SELECT api_calls FROM Users WHERE id = ?", [decoded.id]);
+  //   if (!user) return res.status(401).json({ error: "User not found" });
 
-    if (user.api_calls >= 20) {
-      res.setHeader("X-API-Warning", "API limit reached");
-    } else {
-      await db.query("UPDATE Users SET api_calls = api_calls + 1 WHERE id = ?", [decoded.id]);
-    }
+  //   if (user.api_calls >= 20) {
+  //     res.setHeader("X-API-Warning", "API limit reached");
+  //   } else {
+  //     await db.query("UPDATE Users SET api_calls = api_calls + 1 WHERE id = ?", [decoded.id]);
+  //   }
 
-    next();
-  } catch (err) {
-    return res.status(401).json({ error: "Invalid token" });
-  }
+  //   next();
+  // } catch (err) {
+  //   return res.status(401).json({ error: "Invalid token" });
+  // }
 };
 
 // Admin Middleware
 const authenticateAdmin = async (req, res, next) => {
-  if (!req.user || !req.user.is_admin) {
-    return res.status(403).json({ error: "Access denied" });
-  }
-  next();
+  // if (!req.user || !req.user.is_admin) {
+  //   return res.status(403).json({ error: "Access denied" });
+  // }
+  // next();
 };
 
 // **User Registration**
@@ -121,7 +121,7 @@ app.get("/admin/api-usage", authenticateUser, authenticateAdmin, async (req, res
   }
 });
 
-app.get("/ai-response", authenticateUser, async (req, res) => {
+app.get("/ai-response", async (req, res) => {
   const { prompt } = req.query;
   if (!prompt) return res.status(400).json({ error: "Prompt is required" });
 
