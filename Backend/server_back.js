@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const crypto = require("crypto"); // For generating reset tokens
 const db = require("../modules/dbHandler.js"); // Database module
+const axios = require("axios"); // For making requests to Hugging Face API
 const app = express();
 const PORT = 3000;
 
@@ -117,6 +118,27 @@ app.get("/admin/api-usage", authenticateUser, authenticateAdmin, async (req, res
     res.json({ users });
   } catch (err) {
     res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.get("/ai-response", authenticateUser, async (req, res) => {
+  const { prompt } = req.query;
+  if (!prompt) return res.status(400).json({ error: "Prompt is required" });
+
+  try {
+    const response = await axios.post(
+      "https://api-inference.huggingface.co/models/gpt2", // Use a Hugging Face model like GPT-2 or any other model you prefer
+      { inputs: prompt },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
+        },
+      }
+    );
+
+    res.json({ response: response.data });
+  } catch (err) {
+    res.status(500).json({ error: "Error fetching response from Hugging Face API" });
   }
 });
 
