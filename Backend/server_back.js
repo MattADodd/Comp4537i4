@@ -14,7 +14,11 @@ const { InferenceClient } = require('@huggingface/inference');
 const client = new InferenceClient(process.env.HUGGINGFACE_API_KEY);
 const SECRET_KEY = process.env.JWT_SECRET;
 
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+
+
+app.use(cors());
+
+
 
 
 app.use(express.json()); 
@@ -34,9 +38,14 @@ const CREATE_USERS_TABLE = `
   ) ENGINE=InnoDB;
 `;
 
+
+
+
 db.query(CREATE_USERS_TABLE).then(() => {
   console.log("Users table is ready.");
 }).catch(err => console.error("Error creating Users table:", err));
+
+
 
 // Middleware: Verify JWT and track API usage
 const authenticateUser = async (req, res, next) => {
@@ -70,6 +79,9 @@ const authenticateAdmin = async (req, res, next) => {
   next();
 };
 
+
+app.options("/")
+
 // **User Registration**
 app.post("/register", async (req, res) => {
   const { firstName, email, password, isAdmin } = req.body;
@@ -88,21 +100,6 @@ app.post("/register", async (req, res) => {
 });
 
 
-const path = require('path');
-
-// Serve static files from the "frontend" folder
-app.use(express.static(path.join(__dirname, "../Frontend")));
-
-
-// Serve the login page when the user accesses the root URL
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../Frontend", "login.html"));
-
-});
-
-app.get("/signup", (req, res) => {
-  res.sendFile(path.join(__dirname, "../Frontend/signup.html"));
-});
 
 
 // **User Login**
