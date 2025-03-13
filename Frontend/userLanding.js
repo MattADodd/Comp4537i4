@@ -6,9 +6,14 @@ async function getResponse() {
     }
 
     try {
-        const response = await fetch("/ai-response?prompt=" + encodeURIComponent(prompt));
+        // CHANGE THE URL TO SERVER WHEN IT IS HOSTED!
+        // IMPORTANT ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        const response = await fetch("http://localhost:3000/ai-response?prompt=" + encodeURIComponent(prompt));
         const data = await response.json();
-        document.getElementById("response").value = data.answer || "No response received";
+
+        const answerText = data.answer?.content || "No response received";
+
+        document.getElementById("response").value = answerText;
     } catch (error) {
         console.error("Error fetching response:", error);
         document.getElementById("response").value = "Error retrieving response";
