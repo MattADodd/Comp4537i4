@@ -12,6 +12,8 @@ const { InferenceClient } = require('@huggingface/inference');
 const client = new InferenceClient(process.env.HUGGINGFACE_API_KEY);
 const SECRET_KEY = process.env.JWT_SECRET;
 
+
+
 app.use(express.json()); 
 app.use(cookieParser()); 
 
@@ -82,6 +84,20 @@ app.post("/register", async (req, res) => {
   }
 });
 
+
+const path = require('path');
+
+// Serve static files from the "frontend" folder
+app.use(express.static(path.join(__dirname, "../Frontend")));
+
+
+// Serve the login page when the user accesses the root URL
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../Frontend", "login.html"));
+
+});
+
+
 // **User Login**
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
@@ -101,6 +117,8 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
+
 
 // **View API Calls (User Dashboard)**
 app.get("/dashboard", authenticateUser, async (req, res) => {
