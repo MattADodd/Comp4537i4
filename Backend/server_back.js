@@ -1,5 +1,7 @@
 require("dotenv").config();
 const express = require("express");
+const cors = require('cors'); // Import CORS
+
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
@@ -12,6 +14,7 @@ const { InferenceClient } = require('@huggingface/inference');
 const client = new InferenceClient(process.env.HUGGINGFACE_API_KEY);
 const SECRET_KEY = process.env.JWT_SECRET;
 
+app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 
 
 app.use(express.json()); 
@@ -95,6 +98,10 @@ app.use(express.static(path.join(__dirname, "../Frontend")));
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../Frontend", "login.html"));
 
+});
+
+app.get("/signup", (req, res) => {
+  res.sendFile(path.join(__dirname, "../Frontend/signup.html"));
 });
 
 
