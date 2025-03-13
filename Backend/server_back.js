@@ -8,7 +8,8 @@ const db = require("../modules/dbHandler.js"); // Database module
 const axios = require("axios"); // For making requests to Hugging Face API
 const app = express();
 const PORT = 3000;
-
+const { InferenceClient } = require('@huggingface/inference');
+const client = new InferenceClient(process.env.HUGGINGFACE_API_KEY);
 const SECRET_KEY = process.env.JWT_SECRET;
 
 app.use(express.json()); 
@@ -125,22 +126,22 @@ app.get("/ai-response", async (req, res) => {
   const { prompt } = req.query;
   if (!prompt) return res.status(400).json({ error: "Prompt is required" });
 
-  try {
-    const response = await axios.post(
-      "https://api-inference.huggingface.co/models/gpt2", // Use a Hugging Face model like GPT-2 or any other model you prefer
-      { inputs: prompt },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
-        },
-      }
-    );
-
-    res.json({ response: response.data });
-  } catch (err) {
-    res.status(500).json({ error: "Error fetching response from Hugging Face API" });
-  }
+  
+const chatCompletion = await client.chatCompletion({
+	model: "deepseek-ai/DeepSeek-R1",
+	messages: [
+		{
+			role: "user",
+			content: prompt
+		}
+	],
+	provider: "together",
+	max_tokens: 500,
 });
+let answer = chatCompletion.choices[0].message;
+return res.status(200).json({ answer })
+});
+
 
 // **Forgot Password**
 app.post("/forgot-password", async (req, res) => {
