@@ -16,7 +16,11 @@ const SECRET_KEY = process.env.JWT_SECRET;
 
 
 
-app.use(cors());
+app.use(cors({
+  origin: "http://127.0.0.1:5500",  // Allow requests from your frontend CHANGE WHEN HOSTED
+  methods: "GET,POST",  // Allow only needed HTTP methods
+  credentials: true  // Allow cookies, sessions, and authentication headers
+}));
 
 
 
@@ -94,9 +98,10 @@ app.post("/register", async (req, res) => {
       [firstName, email, hashedPassword, isAdmin || false]
     );
     res.status(201).json({ message: "User registered successfully" });
-  } catch (err) {
-    res.status(400).json({ error: "Email already in use" });
-  }
+   } catch (err) {
+      console.error("Database Error:", err);  // Log the actual error
+      res.status(500).json({ error: "Server error. Please try again later." });
+    }
 });
 
 
