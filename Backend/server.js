@@ -54,38 +54,6 @@ db.query(CREATE_API_STATS_TABLE)
   .then(() => console.log("APIStats table is ready."))
   .catch(err => console.error("Error creating APIStats table:", err));
 
-// // Create an admin user if it doesn't exist
-// const createAdminUser = async () => {
-//   const adminEmail = "rayadmin@admin.com"; 
-//   const adminPassword = "ray123"; 
-//   const adminFirstName = "rayadmin"; 
-
-//   try {
-//     // Check if the admin user already exists
-//     const [user] = await db.query("SELECT id FROM Users WHERE email = ?", [adminEmail]);
-
-//     if (!user) {
-//       // Hash the admin password
-//       const hashedPassword = await bcrypt.hash(adminPassword, 10);
-
-//       // Insert the admin user into the database
-//       await db.query(
-//         "INSERT INTO Users (firstName, email, password, is_admin) VALUES (?, ?, ?, ?)",
-//         [adminFirstName, adminEmail, hashedPassword, true]
-//       );
-
-//       console.log("Admin user created successfully.");
-//     } else {
-//       console.log("Admin user already exists.");
-//     }
-//   } catch (err) {
-//     console.error("Error creating admin user:", err);
-//   }
-// };
-
-// // Call the function to create an admin user
-// createAdminUser();
-
 
 // Middleware: Verify JWT and track API usage
 const authenticateUser = async (req, res, next) => {
@@ -153,7 +121,7 @@ app.post("/login", async (req, res) => {
 
     const token = jwt.sign({ id: user.id, email: user.email, is_admin: user.is_admin }, SECRET_KEY, { expiresIn: "1h" });
     res.cookie("token", token, { httpOnly: true, secure: false });
-    res.json({ message: "Login successful" });
+    res.json({ message: "Login successful", token }); // Send the token in the response
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
