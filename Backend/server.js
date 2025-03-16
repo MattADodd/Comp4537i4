@@ -14,16 +14,11 @@ const { InferenceClient } = require('@huggingface/inference');
 const client = new InferenceClient(process.env.HUGGINGFACE_API_KEY);
 const SECRET_KEY = process.env.JWT_SECRET;
 
-
-
 app.use(cors({
   origin: "http://127.0.0.1:5500",  // Allow requests from your frontend CHANGE WHEN HOSTED
   methods: "GET,POST",  // Allow only needed HTTP methods
   credentials: true  // Allow cookies, sessions, and authentication headers
 }));
-
-
-
 
 app.use(express.json()); 
 app.use(cookieParser()); 
@@ -42,13 +37,54 @@ const CREATE_USERS_TABLE = `
   ) ENGINE=InnoDB;
 `;
 
-
-
-
 db.query(CREATE_USERS_TABLE).then(() => {
   console.log("Users table is ready.");
 }).catch(err => console.error("Error creating Users table:", err));
 
+const CREATE_API_STATS_TABLE = `
+  CREATE TABLE IF NOT EXISTS APIStats (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    method VARCHAR(10) NOT NULL,
+    endpoint VARCHAR(255) NOT NULL,
+    request_count INT DEFAULT 0
+  ) ENGINE=InnoDB;
+`;
+
+db.query(CREATE_API_STATS_TABLE)
+  .then(() => console.log("APIStats table is ready."))
+  .catch(err => console.error("Error creating APIStats table:", err));
+
+// // Create an admin user if it doesn't exist
+// const createAdminUser = async () => {
+//   const adminEmail = "rayadmin@admin.com"; 
+//   const adminPassword = "ray123"; 
+//   const adminFirstName = "rayadmin"; 
+
+//   try {
+//     // Check if the admin user already exists
+//     const [user] = await db.query("SELECT id FROM Users WHERE email = ?", [adminEmail]);
+
+//     if (!user) {
+//       // Hash the admin password
+//       const hashedPassword = await bcrypt.hash(adminPassword, 10);
+
+//       // Insert the admin user into the database
+//       await db.query(
+//         "INSERT INTO Users (firstName, email, password, is_admin) VALUES (?, ?, ?, ?)",
+//         [adminFirstName, adminEmail, hashedPassword, true]
+//       );
+
+//       console.log("Admin user created successfully.");
+//     } else {
+//       console.log("Admin user already exists.");
+//     }
+//   } catch (err) {
+//     console.error("Error creating admin user:", err);
+//   }
+// };
+
+// // Call the function to create an admin user
+// createAdminUser();
 
 
 // Middleware: Verify JWT and track API usage
@@ -83,7 +119,6 @@ const authenticateAdmin = async (req, res, next) => {
   next();
 };
 
-
 app.options("/")
 
 // **User Registration**
@@ -98,14 +133,11 @@ app.post("/register", async (req, res) => {
       [firstName, email, hashedPassword, isAdmin || false]
     );
     res.status(201).json({ message: "User registered successfully" });
-   } catch (err) {
+    } catch (err) {
       console.error("Database Error:", err);  // Log the actual error
       res.status(500).json({ error: "Server error. Please try again later." });
     }
 });
-
-
-
 
 // **User Login**
 app.post("/login", async (req, res) => {
@@ -128,7 +160,6 @@ app.post("/login", async (req, res) => {
 });
 
 
-
 // **View API Calls (User Dashboard)**
 app.get("/dashboard", authenticateUser, async (req, res) => {
   try {
@@ -140,11 +171,19 @@ app.get("/dashboard", authenticateUser, async (req, res) => {
 });
 
 // **Admin View API Usage**
-app.get("/admin/api-usage", authenticateUser, authenticateAdmin, async (req, res) => {
+// Endpoint to fetch API stats and user consumption data
+app.get("/admin/api-data", authenticateUser, authenticateAdmin, async (req, res) => {
   try {
-    const users = await db.query("SELECT id, firstName, email, api_calls FROM Users");
-    res.json({ users });
+    // Fetch API endpoint stats
+    const apiStats = await db.query("SELECT method, endpoint, request_count FROM APIStats");
+
+    // Fetch user API consumption stats
+    const userStats = await db.query("SELECT id, firstName, email, api_calls FROM Users");
+
+    // Return the data as JSON
+    res.json({ apiStats, userStats });
   } catch (err) {
+    console.error("Error fetching stats:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -169,6 +208,25 @@ let answer = chatCompletion.choices[0].message;
 return res.status(200).json({ answer })
 });
 
+// Admin Dashboard Route
+app.get("/admin/dashboard", authenticateUser, authenticateAdmin, async (req, res) => {
+  try {
+    // Fetch API endpoint stats
+    const apiStats = await db.query("SELECT method, endpoint, request_count FROM APIStats");
+
+    // Fetch user API consumption stats
+    const userStats = await db.query("SELECT id, firstName, email, api_calls FROM Users");
+
+    // Render the admin page with the stats
+    res.render("admin_dashboard", {
+      apiStats,
+      userStats,
+    });
+  } catch (err) {
+    console.error("Error fetching stats:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 // **Forgot Password**
 app.post("/forgot-password", async (req, res) => {
