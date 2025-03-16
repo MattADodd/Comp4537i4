@@ -121,12 +121,11 @@ app.post("/login", async (req, res) => {
 
     const token = jwt.sign({ id: user.id, email: user.email, is_admin: user.is_admin }, SECRET_KEY, { expiresIn: "1h" });
     res.cookie("token", token, { httpOnly: true, secure: false });
-    res.json({ message: "Login successful", token }); // Send the token in the response
+    res.json({ message: "Login successful", token, is_admin: user.is_admin }); // Include is_admin in the response
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
 });
-
 
 // **View API Calls (User Dashboard)**
 app.get("/dashboard", authenticateUser, async (req, res) => {

@@ -1,11 +1,31 @@
-// Function to fetch data from the server and populate the tables
+// Check if the user is logged in
+const token = localStorage.getItem("token");
+
+if (!token) {
+  alert("You are not logged in. Redirecting to login page...");
+  window.location.href = "/login.html"; // Redirect to the login page
+} else {
+  // Fetch data if the user is logged in
+  fetchData();
+}
+
 async function fetchData() {
   try {
     const response = await fetch("/admin/api-data", {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`, // Use token for authentication
+        Authorization: `Bearer ${token}`, // Use the token from localStorage
       },
     });
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        alert("You are not authorized to view this page.");
+        window.location.href = "/login.html"; // Redirect to login page
+        return;
+      }
+      throw new Error("Failed to fetch data");
+    }
+
     const data = await response.json();
 
     // Populate API Stats Table
@@ -37,8 +57,6 @@ async function fetchData() {
       .join("");
   } catch (error) {
     console.error("Error fetching data:", error);
+    alert("An error occurred. Please try again later.");
   }
 }
-
-// Fetch data when the page loads
-fetchData();

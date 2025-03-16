@@ -15,8 +15,16 @@ document.querySelector("form").addEventListener("submit", async function (event)
         const data = await response.json();
 
         if (response.ok) {
+            // Store the token in localStorage
+            localStorage.setItem("token", data.token);
             alert("Login successful!");
-            window.location.href = "/dashboard.html"; // Redirect to dashboard
+
+            // Redirect to the appropriate page
+            if (data.is_admin) {
+                window.location.href = "/admin.html"; // Redirect to admin page if user is admin
+            } else {
+                window.location.href = "/dashboard.html"; // Redirect to dashboard for regular users
+            }
         } else {
             alert(data.error || "Login failed!");
         }
