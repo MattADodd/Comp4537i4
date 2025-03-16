@@ -21,9 +21,9 @@ document.querySelector("form").addEventListener("submit", async function (event)
 
             // Redirect to the appropriate page
             if (data.is_admin) {
-                window.location.href = "/admin.html"; // Redirect to admin page if user is admin
+                window.location.href = "/Comp4537i4/Frontend/admin.html"; // Redirect to admin page if user is admin
             } else {
-                window.location.href = "/dashboard.html"; // Redirect to dashboard for regular users
+                window.location.href = "/Comp4537i4/Frontend/userLanding.html"; // Redirect to dashboard for regular users
             }
         } else {
             alert(data.error || "Login failed!");

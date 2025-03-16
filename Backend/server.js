@@ -14,10 +14,24 @@ const { InferenceClient } = require('@huggingface/inference');
 const client = new InferenceClient(process.env.HUGGINGFACE_API_KEY);
 const SECRET_KEY = process.env.JWT_SECRET;
 
+// Preflight (OPTIONS) request handling
+app.options("*", (req, res) => {
+  res.header("Access-Control-Allow-Origin", "http://127.0.0.1:5500"); // Match frontend
+  res.header("Access-Control-Allow-Credentials", "true"); // Allow cookies
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS"); // Allow necessary methods
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization"); // Allow necessary headers
+  res.sendStatus(204); // No content response
+});
+
+// CORS Middleware
 app.use(cors({
-  origin: "http://127.0.0.1:5500",  // Allow requests from your frontend CHANGE WHEN HOSTED
-  methods: "GET,POST",  // Allow only needed HTTP methods
-  credentials: true  // Allow cookies, sessions, and authentication headers
+  origin: [
+    "http://localhost:5500",   // For localhost
+    "http://127.0.0.1:5500"    // For 127.0.0.1
+  ], // Allow requests from your frontend
+  methods: ["GET", "POST"], // Only allow needed methods
+  credentials: true, // Allow cookies (important for credentials)
+  allowedHeaders: ["Content-Type", "Authorization"], // Allow necessary headers
 }));
 
 app.use(express.json()); 
@@ -50,11 +64,6 @@ const CREATE_API_STATS_TABLE = `
   ) ENGINE=InnoDB;
 `;
 
-db.query(CREATE_API_STATS_TABLE)
-  .then(() => console.log("APIStats table is ready."))
-  .catch(err => console.error("Error creating APIStats table:", err));
-
-
 // Middleware: Verify JWT and track API usage
 const authenticateUser = async (req, res, next) => {
   const token = req.cookies.token;
@@ -62,15 +71,16 @@ const authenticateUser = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, SECRET_KEY);
-    req.user = decoded;
+    const [user] = await db.query("SELECT id, api_calls FROM Users WHERE id = ?", [decoded.id]);
 
-    const [user] = await db.query("SELECT api_calls FROM Users WHERE id = ?", [decoded.id]);
     if (!user) return res.status(401).json({ error: "User not found" });
+
+    req.user = { id: user.id, api_calls: user.api_calls, is_admin: decoded.is_admin };
 
     if (user.api_calls >= 20) {
       res.setHeader("X-API-Warning", "API limit reached");
     } else {
-      await db.query("UPDATE Users SET api_calls = api_calls + 1 WHERE id = ?", [decoded.id]);
+      await db.query("UPDATE Users SET api_calls = api_calls + 1 WHERE id = ?", [user.id]);
     }
 
     next();
@@ -81,13 +91,14 @@ const authenticateUser = async (req, res, next) => {
 
 // Admin Middleware
 const authenticateAdmin = async (req, res, next) => {
-  if (!req.user || !req.user.is_admin) {
+  const token = req.cookies.token;
+  const decoded = jwt.verify(token, SECRET_KEY);
+
+  if (!decoded.is_admin) {
     return res.status(403).json({ error: "Access denied" });
   }
   next();
 };
-
-app.options("/")
 
 // **User Registration**
 app.post("/register", async (req, res) => {
@@ -120,7 +131,7 @@ app.post("/login", async (req, res) => {
     if (!isMatch) return res.status(401).json({ error: "Invalid credentials" });
 
     const token = jwt.sign({ id: user.id, email: user.email, is_admin: user.is_admin }, SECRET_KEY, { expiresIn: "1h" });
-    res.cookie("token", token, { httpOnly: true, secure: false });
+    res.setHeader('Set-Cookie', `token=${token}; HttpOnly;`);
     res.json({ message: "Login successful", token, is_admin: user.is_admin }); // Include is_admin in the response
   } catch (err) {
     res.status(500).json({ error: "Server error" });
@@ -139,16 +150,13 @@ app.get("/dashboard", authenticateUser, async (req, res) => {
 
 // **Admin View API Usage**
 // Endpoint to fetch API stats and user consumption data
-app.get("/admin/api-data", authenticateUser, authenticateAdmin, async (req, res) => {
+app.get("/admin/api-data", authenticateAdmin, async (req, res) => {
   try {
-    // Fetch API endpoint stats
-    const apiStats = await db.query("SELECT method, endpoint, request_count FROM APIStats");
-
     // Fetch user API consumption stats
     const userStats = await db.query("SELECT id, firstName, email, api_calls FROM Users");
 
     // Return the data as JSON
-    res.json({ apiStats, userStats });
+    res.json({ userStats });
   } catch (err) {
     console.error("Error fetching stats:", err);
     res.status(500).json({ error: "Server error" });
@@ -159,39 +167,22 @@ app.get("/ai-response", async (req, res) => {
   const { prompt } = req.query;
   if (!prompt) return res.status(400).json({ error: "Prompt is required" });
 
-  
-const chatCompletion = await client.chatCompletion({
-	model: "deepseek-ai/DeepSeek-R1",
-	messages: [
-		{
-			role: "user",
-			content: prompt
-		}
-	],
-	provider: "together",
-	max_tokens: 500,
-});
-let answer = chatCompletion.choices[0].message;
-return res.status(200).json({ answer })
-});
-
-// Admin Dashboard Route
-app.get("/admin/dashboard", authenticateUser, authenticateAdmin, async (req, res) => {
   try {
-    // Fetch API endpoint stats
-    const apiStats = await db.query("SELECT method, endpoint, request_count FROM APIStats");
-
-    // Fetch user API consumption stats
-    const userStats = await db.query("SELECT id, firstName, email, api_calls FROM Users");
-
-    // Render the admin page with the stats
-    res.render("admin_dashboard", {
-      apiStats,
-      userStats,
+    const chatCompletion = await client.chatCompletion({
+      model: "deepseek-ai/DeepSeek-R1",
+      messages: [
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      provider: "together",
+      max_tokens: 500,
     });
+    let answer = chatCompletion.choices[0].message;
+    return res.status(200).json({ answer });
   } catch (err) {
-    console.error("Error fetching stats:", err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: "Error with Hugging Face API" });
   }
 });
 

@@ -1,62 +1,41 @@
-// Check if the user is logged in
-const token = localStorage.getItem("token");
+fetch("http://localhost:3000/admin/api-data", {
+  method: "GET",
+  credentials: "include", // Ensures cookies are sent with the request
+})
+.then((response) => response.json())
+.then((data) => {
+  console.log("API Data:", data); // Log the data to inspect its structure
 
-if (!token) {
-  alert("You are not logged in. Redirecting to login page...");
-  window.location.href = "/login.html"; // Redirect to the login page
-} else {
-  // Fetch data if the user is logged in
-  fetchData();
-}
+  // Access the userStats array from the response object
+  if (data.userStats && Array.isArray(data.userStats)) {
+      const tableBody = document.getElementById("userStatsTable");
 
-async function fetchData() {
-  try {
-    const response = await fetch("/admin/api-data", {
-      headers: {
-        Authorization: `Bearer ${token}`, // Use the token from localStorage
-      },
-    });
+      // Loop through the 'userStats' array and create a row for each user
+      data.userStats.forEach(user => {
+          const row = document.createElement("tr");
 
-    if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
-        alert("You are not authorized to view this page.");
-        window.location.href = "/login.html"; // Redirect to login page
-        return;
-      }
-      throw new Error("Failed to fetch data");
-    }
+          const usernameCell = document.createElement("td");
+          usernameCell.classList.add("px-6", "py-4", "text-sm", "font-medium", "text-gray-900");
+          usernameCell.textContent = user.firstName; // Using firstName instead of username
+          row.appendChild(usernameCell);
 
-    const data = await response.json();
+          const emailCell = document.createElement("td");
+          emailCell.classList.add("px-6", "py-4", "text-sm", "font-medium", "text-gray-900");
+          emailCell.textContent = user.email; // Assuming the user object has an 'email' property
+          row.appendChild(emailCell);
 
-    // Populate API Stats Table
-    const apiStatsTable = document.getElementById("apiStatsTable");
-    apiStatsTable.innerHTML = data.apiStats
-      .map(
-        (stat) => `
-        <tr>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${stat.method}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${stat.endpoint}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${stat.request_count}</td>
-        </tr>
-      `
-      )
-      .join("");
+          const requestsCell = document.createElement("td");
+          requestsCell.classList.add("px-6", "py-4", "text-sm", "font-medium", "text-gray-900");
+          requestsCell.textContent = user.api_calls; // Assuming the user object has 'api_calls' property
+          row.appendChild(requestsCell);
 
-    // Populate User Stats Table
-    const userStatsTable = document.getElementById("userStatsTable");
-    userStatsTable.innerHTML = data.userStats
-      .map(
-        (user) => `
-        <tr>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${user.firstName}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${user.email}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${user.api_calls}</td>
-        </tr>
-      `
-      )
-      .join("");
-  } catch (error) {
-    console.error("Error fetching data:", error);
-    alert("An error occurred. Please try again later.");
+          // Append the row to the table body
+          tableBody.appendChild(row);
+      });
+  } else {
+      console.error("UserStats data is not in the expected format:", data);
   }
-}
+})
+.catch((error) => {
+  console.error("Error:", error);
+});
