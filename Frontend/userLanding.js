@@ -19,3 +19,26 @@ async function getResponse() {
         document.getElementById("response").value = "Error retrieving response";
     }
 }
+
+// Send a GET request to the "/dashboard" endpoint
+fetch("http://localhost:3000/dashboard", {
+    method: "GET",
+    credentials: "include", // Ensure cookies are sent with the request
+})
+.then((response) => response.json())
+.then((data) => {
+    // Check if the response contains 'api_calls' data
+    if (data.api_calls !== undefined) {
+        // Update the DOM with the number of API calls
+        const apiCallsText = document.getElementById("apiCallsText");
+        apiCallsText.textContent = `API Calls Made: ${data.api_calls}`;
+    } else {
+        // Handle unexpected response format
+        console.error("Unexpected response:", data);
+    }
+})
+.catch((error) => {
+    console.error("Error:", error);
+    const apiCallsText = document.getElementById("apiCallsText");
+    apiCallsText.textContent = "Failed to load API calls data.";
+});

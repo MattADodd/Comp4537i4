@@ -55,15 +55,6 @@ db.query(CREATE_USERS_TABLE).then(() => {
   console.log("Users table is ready.");
 }).catch(err => console.error("Error creating Users table:", err));
 
-const CREATE_API_STATS_TABLE = `
-  CREATE TABLE IF NOT EXISTS APIStats (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    method VARCHAR(10) NOT NULL,
-    endpoint VARCHAR(255) NOT NULL,
-    request_count INT DEFAULT 0
-  ) ENGINE=InnoDB;
-`;
-
 // Middleware: Verify JWT and track API usage
 const authenticateUser = async (req, res, next) => {
   const token = req.cookies.token;
@@ -139,9 +130,11 @@ app.post("/login", async (req, res) => {
 });
 
 // **View API Calls (User Dashboard)**
-app.get("/dashboard", authenticateUser, async (req, res) => {
+app.get("/dashboard", async (req, res) => {
+  const token = req.cookies.token;
+  const decoded = jwt.verify(token, SECRET_KEY);
   try {
-    const [user] = await db.query("SELECT api_calls FROM Users WHERE id = ?", [req.user.id]);
+    const [user] = await db.query("SELECT api_calls FROM Users WHERE id = ?", [decoded.id]);
     res.json({ api_calls: user.api_calls });
   } catch (err) {
     res.status(500).json({ error: "Server error" });
