@@ -16,7 +16,7 @@ const SECRET_KEY = process.env.JWT_SECRET;
 
 // Preflight (OPTIONS) request handling
 app.options("*", (req, res) => {
-  res.header("Access-Control-Allow-Origin", "http://127.0.0.1:5500"); // Match frontend
+  res.header("Access-Control-Allow-Origin", "*"); // Match frontend
   res.header("Access-Control-Allow-Credentials", "true"); // Allow cookies
   res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS"); // Allow necessary methods
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization"); // Allow necessary headers
