@@ -31,7 +31,7 @@ fetch("http://localhost:3000/dashboard", {
     if (data.api_calls !== undefined) {
         // Update the DOM with the number of API calls
         const apiCallsText = document.getElementById("apiCallsText");
-        apiCallsText.textContent = `API Calls Made: ${data.api_calls}`;
+        apiCallsText.textContent = `API Calls Left: ${20-data.api_calls}`;
     } else {
         // Handle unexpected response format
         console.error("Unexpected response:", data);

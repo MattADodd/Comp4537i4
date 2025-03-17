@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require('cors'); // Import CORS
 
-const bcrypt = require("bcrypt");
+const bcrypt = require('bcryptjs');
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const crypto = require("crypto"); // For generating reset tokens
