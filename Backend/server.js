@@ -27,7 +27,8 @@ app.options("*", (req, res) => {
 app.use(cors({
   origin: [
     "http://localhost:5500",   // For localhost
-    "http://127.0.0.1:5500"    // For 127.0.0.1
+    "http://127.0.0.1:5500",
+    "https://comp4537i4.vercel.app"    // For 127.0.0.1
   ], // Allow requests from your frontend
   methods: ["GET", "POST"], // Only allow needed methods
   credentials: true, // Allow cookies (important for credentials)
