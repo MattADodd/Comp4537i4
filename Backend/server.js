@@ -122,7 +122,7 @@ app.post("/login", async (req, res) => {
     if (!isMatch) return res.status(401).json({ error: "Invalid credentials" });
 
     const token = jwt.sign({ id: user.id, email: user.email, is_admin: user.is_admin }, SECRET_KEY, { expiresIn: "1h" });
-    res.setHeader('Set-Cookie', `token=${token}; HttpOnly;`);
+    res.setHeader('Set-Cookie', `token=${token}; HttpOnly; Max-Age=3600; Path=/; SameSite=None; Secure`);
     res.json({ message: "Login successful", token, is_admin: user.is_admin }); // Include is_admin in the response
   } catch (err) {
     res.status(500).json({ error: "Server error" });
