@@ -8,7 +8,7 @@ async function getResponse() {
     try {
         // CHANGE THE URL TO SERVER WHEN IT IS HOSTED!
         // IMPORTANT ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        const response = await fetch("http://localhost:3000/ai-response?prompt=" + encodeURIComponent(prompt));
+        const response = await fetch("https://whale-app-2-zoykf.ondigitalocean.app//ai-response?prompt=" + encodeURIComponent(prompt));
         const data = await response.json();
 
         const answerText = data.answer?.content || "No response received";
@@ -21,7 +21,7 @@ async function getResponse() {
 }
 
 // Send a GET request to the "/dashboard" endpoint
-fetch("http://localhost:3000/dashboard", {
+fetch("https://whale-app-2-zoykf.ondigitalocean.app/dashboard", {
     method: "GET",
     credentials: "include", // Ensure cookies are sent with the request
 })

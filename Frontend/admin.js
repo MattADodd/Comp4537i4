@@ -1,4 +1,4 @@
-fetch("http://localhost:3000/admin/api-data", {
+fetch("https://whale-app-2-zoykf.ondigitalocean.app/admin/api-data", {
   method: "GET",
   credentials: "include", // Ensures cookies are sent with the request
 })

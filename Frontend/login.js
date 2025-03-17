@@ -5,7 +5,7 @@ document.querySelector("form").addEventListener("submit", async function (event)
     const password = document.getElementById("password").value;
 
     try {
-        const response = await fetch("http://localhost:3000/login", {
+        const response = await fetch("https://whale-app-2-zoykf.ondigitalocean.app/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password }),
@@ -18,7 +18,7 @@ document.querySelector("form").addEventListener("submit", async function (event)
             // Store the token in localStorage
             localStorage.setItem("token", data.token);
             alert("Login successful!");
-            window.location.href = "/Comp4537i4/Frontend/userLanding.html"; // Redirect to dashboard for regular users
+            window.location.href = "./userLanding.html"; // Redirect to dashboard for regular users
         } else {
             alert(data.error || "Login failed!");
         }

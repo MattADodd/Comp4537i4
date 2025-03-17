@@ -20,7 +20,7 @@ signupForm.addEventListener("submit", async (event) => {
     console.log("Sending data:", userData);  // Log data before sending
 
     try {
-        const response = await fetch("http://localhost:3000/register", {
+        const response = await fetch("https://whale-app-2-zoykf.ondigitalocean.app/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(userData)
@@ -31,7 +31,7 @@ signupForm.addEventListener("submit", async (event) => {
 
         if (response.ok) {
             alert("Registration successful!");
-            window.location.href = "/Comp4537i4/Frontend/login.html";
+            window.location.href = "./login.html";
         } else {
             alert(data.error || "Registration failed!");
         }
