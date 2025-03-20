@@ -167,11 +167,11 @@ app.get("/ai-response", async (req, res) => {
       messages: [
         {
           role: "user",
-          content: prompt
+          content: "please tell me a story about" + prompt
         }
       ],
       provider: "together",
-      max_tokens: 500,
+      max_tokens: 50,
     });
     let answer = chatCompletion.choices[0].message;
     return res.status(200).json({ answer });
