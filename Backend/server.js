@@ -196,7 +196,7 @@ app.get("/ai-response", authenticateUser, async (req, res) => {
 
   try {
     // Send request to the locally running Ollama server
-    const response = await fetch("http://10.65.42.243:11436/api/generate", {
+    const response = await fetch("https://47e0-142-232-152-19.ngrok-free.app/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
