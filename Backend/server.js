@@ -34,7 +34,8 @@ app.use(cors({
   origin: [
     "http://localhost:5500",   // Allow localhost requests for development
     "http://127.0.0.1:5500",
-    "https://comp4537i4.vercel.app"    // Allow requests from production frontend
+    "https://comp4537i4.vercel.app",
+    "https://47e0-142-232-152-19.ngrok-free.app"    // Allow requests from production frontend
   ],
   methods: ["GET", "POST"], // Allow only GET and POST requests
   credentials: true, // Allow cookies to be sent along with requests
