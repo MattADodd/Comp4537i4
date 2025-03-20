@@ -30,7 +30,38 @@ fetch("https://whale-app-2-zoykf.ondigitalocean.app/admin/api-data", {
           row.appendChild(requestsCell);
 
           // Append the row to the table body
-          tableBody.appendChild(row);
+
+        //NEW CODE> DELETE IF DOESNT WORK
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Delete";
+        deleteButton.classList.add("px-4","py-2","bg-red-500","text-white","rounded", "hover:bg-red-700");
+        deleteButton.addEventListener("click", () => {
+          fetch(
+            `https://whale-app-2-zoykf.ondigitalocean.app/admin/delete-user/${user.id}`,
+            {
+              method: "DELETE",
+              credentials: "include",
+            }
+          )
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error("Failed to delete user");
+              }
+              return response.json();
+            })
+            .then(() => {
+              row.remove(); // Remove the row from the table on success
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+        });
+
+        const deleteCell = document.createElement("td");
+        deleteCell.appendChild(deleteButton);
+        row.appendChild(deleteCell);
+
+        tableBody.appendChild(row);
       });
   } else {
       console.error("UserStats data is not in the expected format:", data);

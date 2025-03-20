@@ -190,6 +190,20 @@ app.get("/ai-response", authenticateUser, async (req, res) => {
   }
 });
 
+app.delete("/admin/delete-user/:id", authenticateAdmin, async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Delete user from database
+    await db.query("DELETE FROM Users WHERE id = ?", [userId]);
+
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ error: "Failed to delete user" });
+  }
+});
+
 // // **Forgot Password Route**
 // app.post("/forgot-password", async (req, res) => {
 //   const { email } = req.body;
