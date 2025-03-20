@@ -6,8 +6,6 @@ async function getResponse() {
     }
 
     try {
-        // CHANGE THE URL TO SERVER WHEN IT IS HOSTED!
-        // IMPORTANT ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         const response = await fetch("https://whale-app-2-zoykf.ondigitalocean.app/ai-response?prompt=" + encodeURIComponent(prompt), {
             method: "GET",
             credentials: "include"

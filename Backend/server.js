@@ -1,44 +1,53 @@
+// Load environment variables from .env file
 require("dotenv").config();
-const express = require("express");
-const cors = require('cors'); // Import CORS
 
-const bcrypt = require('bcryptjs');
-const jwt = require("jsonwebtoken");
-const cookieParser = require("cookie-parser");
-const crypto = require("crypto"); // For generating reset tokens
-const db = require("../modules/dbHandler.js"); // Database module
-const axios = require("axios"); // For making requests to Hugging Face API
-const app = express();
-const PORT = 3000;
+// Import required dependencies
+const express = require("express");
+const cors = require('cors'); // Import CORS to handle cross-origin requests
+const bcrypt = require('bcryptjs'); // For password hashing
+const jwt = require("jsonwebtoken"); // For handling JSON Web Tokens (JWT)
+const cookieParser = require("cookie-parser"); // For parsing cookies in requests
+const crypto = require("crypto"); // For generating secure reset tokens
+const db = require("../modules/dbHandler.js"); // Database module for interacting with the database
+const axios = require("axios"); // For making HTTP requests to external APIs like Hugging Face
+const app = express(); // Initialize Express app
+const PORT = 3000; // Port where the server will run
+
+// Initialize Hugging Face client
 const { InferenceClient } = require('@huggingface/inference');
 const client = new InferenceClient(process.env.HUGGINGFACE_API_KEY);
+
+// Secret key for JWT token verification
 const SECRET_KEY = process.env.JWT_SECRET;
 
-// Preflight (OPTIONS) request handling
+// Preflight (OPTIONS) request handling to allow CORS for specific methods
 app.options("*", (req, res) => {
-  res.header("Access-Control-Allow-Origin", "https://comp4537i4.vercel.app"); // Match frontend
-  res.header("Access-Control-Allow-Credentials", "true"); // Allow cookies
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS"); // Allow necessary methods
+  res.header("Access-Control-Allow-Origin", "https://comp4537i4.vercel.app"); // Allow frontend to make requests
+  res.header("Access-Control-Allow-Credentials", "true"); // Allow cookies in CORS requests
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS"); // Allow necessary HTTP methods
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization"); // Allow necessary headers
   res.sendStatus(204); // No content response
 });
 
-// CORS Middleware
+// CORS Middleware - Defines which origins and methods are allowed to make requests to this API
 app.use(cors({
   origin: [
-    "http://localhost:5500",   // For localhost
+    "http://localhost:5500",   // Allow localhost requests for development
     "http://127.0.0.1:5500",
-    "https://comp4537i4.vercel.app"    // For 127.0.0.1
-  ], // Allow requests from your frontend
-  methods: ["GET", "POST"], // Only allow needed methods
-  credentials: true, // Allow cookies (important for credentials)
+    "https://comp4537i4.vercel.app"    // Allow requests from production frontend
+  ],
+  methods: ["GET", "POST"], // Allow only GET and POST requests
+  credentials: true, // Allow cookies to be sent along with requests
   allowedHeaders: ["Content-Type", "Authorization"], // Allow necessary headers
 }));
 
+// Middleware to parse JSON request bodies
 app.use(express.json()); 
+
+// Middleware to parse cookies in requests
 app.use(cookieParser()); 
 
-// Create Users table if not exists
+// SQL Query to create Users table if it doesn't exist
 const CREATE_USERS_TABLE = `
   CREATE TABLE IF NOT EXISTS Users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -52,65 +61,68 @@ const CREATE_USERS_TABLE = `
   ) ENGINE=InnoDB;
 `;
 
+// Execute the SQL query to create the Users table
 db.query(CREATE_USERS_TABLE).then(() => {
   console.log("Users table is ready.");
 }).catch(err => console.error("Error creating Users table:", err));
 
-// Middleware: Verify JWT and track API usage
+// Middleware to authenticate user via JWT and track API usage
 const authenticateUser = async (req, res, next) => {
-  const token = req.cookies.token;
-  if (!token) return res.status(401).json({ error: "Unauthorized" });
+  const token = req.cookies.token; // Get JWT token from cookies
+  if (!token) return res.status(401).json({ error: "Unauthorized" }); // If no token, unauthorized
 
   try {
-    const decoded = jwt.verify(token, SECRET_KEY);
+    const decoded = jwt.verify(token, SECRET_KEY); // Verify JWT
     const [user] = await db.query("SELECT id, api_calls FROM Users WHERE id = ?", [decoded.id]);
 
     if (!user) return res.status(401).json({ error: "User not found" });
 
-    req.user = { id: user.id, api_calls: user.api_calls, is_admin: decoded.is_admin };
+    req.user = { id: user.id, api_calls: user.api_calls, is_admin: decoded.is_admin }; // Attach user data to request object
 
+    // Check if API call limit is reached
     if (user.api_calls >= 20) {
       res.setHeader("X-API-Warning", "API limit reached");
     } else {
-      await db.query("UPDATE Users SET api_calls = api_calls + 1 WHERE id = ?", [user.id]);
+      await db.query("UPDATE Users SET api_calls = api_calls + 1 WHERE id = ?", [user.id]); // Increment API call count
     }
 
-    next();
+    next(); // Move to next middleware/route handler
   } catch (err) {
-    return res.status(401).json({ error: "Invalid token" });
+    return res.status(401).json({ error: "Invalid token" }); // Invalid token error
   }
 };
 
-// Admin Middleware
+// Middleware to authenticate admin via JWT
 const authenticateAdmin = async (req, res, next) => {
-  const token = req.cookies.token;
-  const decoded = jwt.verify(token, SECRET_KEY);
+  const token = req.cookies.token; // Get JWT token from cookies
+  const decoded = jwt.verify(token, SECRET_KEY); // Verify JWT
 
   if (!decoded.is_admin) {
-    return res.status(403).json({ error: "Access denied" });
+    return res.status(403).json({ error: "Access denied" }); // If not admin, deny access
   }
-  next();
+  next(); // Move to next middleware/route handler
 };
 
-// **User Registration**
+// **User Registration Route**
 app.post("/register", async (req, res) => {
   const { firstName, email, password, isAdmin } = req.body;
   if (!firstName || !email || !password) return res.status(400).json({ error: "All fields required" });
 
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10); // Hash the password
+    // Insert new user into the database
     await db.query(
       "INSERT INTO Users (firstName, email, password, is_admin) VALUES (?, ?, ?, ?)",
       [firstName, email, hashedPassword, isAdmin || false]
     );
     res.status(201).json({ message: "User registered successfully" });
-    } catch (err) {
-      console.error("Database Error:", err);  // Log the actual error
-      res.status(500).json({ error: "Server error. Please try again later." });
-    }
+  } catch (err) {
+    console.error("Database Error:", err);  // Log the actual error
+    res.status(500).json({ error: "Server error. Please try again later." });
+  }
 });
 
-// **User Login**
+// **User Login Route**
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: "All fields required" });
@@ -119,44 +131,45 @@ app.post("/login", async (req, res) => {
     const [user] = await db.query("SELECT * FROM Users WHERE email = ?", [email]);
     if (!user) return res.status(401).json({ error: "Invalid credentials" });
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password); // Compare provided password with hashed password
     if (!isMatch) return res.status(401).json({ error: "Invalid credentials" });
 
+    // Create JWT token
     const token = jwt.sign({ id: user.id, email: user.email, is_admin: user.is_admin }, SECRET_KEY, { expiresIn: "1h" });
+    // Set token in cookie for subsequent requests
     res.setHeader('Set-Cookie', `token=${token}; HttpOnly; Max-Age=3600; Path=/; SameSite=None; Secure`);
-    res.json({ message: "Login successful", token, is_admin: user.is_admin }); // Include is_admin in the response
+    res.json({ message: "Login successful", token, is_admin: user.is_admin }); // Send success response with token
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
 });
 
-// **View API Calls (User Dashboard)**
+// **User Dashboard Route** (View API Calls)
 app.get("/dashboard", async (req, res) => {
-  const token = req.cookies.token;
-  const decoded = jwt.verify(token, SECRET_KEY);
+  const token = req.cookies.token; // Get JWT token from cookies
+  const decoded = jwt.verify(token, SECRET_KEY); // Verify JWT
   try {
     const [user] = await db.query("SELECT api_calls FROM Users WHERE id = ?", [decoded.id]);
-    res.json({ api_calls: user.api_calls });
+    res.json({ api_calls: user.api_calls }); // Return the user's API call count
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
 });
 
-// **Admin View API Usage**
-// Endpoint to fetch API stats and user consumption data
+// **Admin Route** to View API Usage Data
 app.get("/admin/api-data", authenticateAdmin, async (req, res) => {
   try {
-    // Fetch user API consumption stats
+    // Fetch API stats and user consumption data
     const userStats = await db.query("SELECT id, firstName, email, api_calls FROM Users");
 
-    // Return the data as JSON
-    res.json({ userStats });
+    res.json({ userStats }); // Return stats as JSON
   } catch (err) {
     console.error("Error fetching stats:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
+// **AI Response Route** - Integrates with Hugging Face API to generate responses
 app.get("/ai-response", authenticateUser, async (req, res) => {
   const { prompt } = req.query;
   if (!prompt) return res.status(400).json({ error: "Prompt is required" });
@@ -165,78 +178,72 @@ app.get("/ai-response", authenticateUser, async (req, res) => {
     const chatCompletion = await client.chatCompletion({
       model: "deepseek-ai/DeepSeek-R1",
       messages: [
-        {
-          role: "user",
-          content: "please tell me a story about" + prompt
-        }
+        { role: "user", content: "please tell me a story about" + prompt }
       ],
       provider: "together",
       max_tokens: 20,
     });
-    let answer = chatCompletion.choices[0].message;
+    let answer = chatCompletion.choices[0].message; // Extract the response from the model
     return res.status(200).json({ answer });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// **Forgot Password**
-app.post("/forgot-password", async (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ error: "Email is required" });
+// // **Forgot Password Route**
+// app.post("/forgot-password", async (req, res) => {
+//   const { email } = req.body;
+//   if (!email) return res.status(400).json({ error: "Email is required" });
 
-  try {
-    const [user] = await db.query("SELECT id FROM Users WHERE email = ?", [email]);
-    if (!user) return res.status(404).json({ error: "Email not found" });
+//   try {
+//     const [user] = await db.query("SELECT id FROM Users WHERE email = ?", [email]);
+//     if (!user) return res.status(404).json({ error: "Email not found" });
 
-    const resetToken = crypto.randomBytes(32).toString("hex");
-    const expiryTime = new Date(Date.now() + 15 * 60 * 1000);
+//     const resetToken = crypto.randomBytes(32).toString("hex"); // Generate a random token for password reset
+//     const expiryTime = new Date(Date.now() + 15 * 60 * 1000); // Set expiry time for 15 minutes
 
-    await db.query(
-      "UPDATE Users SET reset_token = ?, reset_token_expiry = ? WHERE email = ?",
-      [resetToken, expiryTime, email]
-    );
+//     // Update the reset token and expiry time in the database
+//     await db.query(
+//       "UPDATE Users SET reset_token = ?, reset_token_expiry = ? WHERE email = ?",
+//       [resetToken, expiryTime, email]
+//     );
 
-    const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
-    console.log(`Password reset link: ${resetLink}`);
+//     const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
+//     console.log(`Password reset link: ${resetLink}`); // Log the reset link (this would be sent via email in a real app)
 
-    res.json({ message: "Password reset email sent. Check console for link." });
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
-  }
-});
+//     res.json({ message: "Password reset email sent. Check console for link." });
+//   } catch (err) {
+//     res.status(500).json({ error: "Server error" });
+//   }
+// });
 
-// **Reset Password**
-app.post("/reset-password", async (req, res) => {
-  const { token, newPassword } = req.body;
-  if (!token || !newPassword) return res.status(400).json({ error: "Token and new password required" });
+// // **Reset Password Route**
+// app.post("/reset-password", async (req, res) => {
+//   const { token, newPassword } = req.body;
+//   if (!token || !newPassword) return res.status(400).json({ error: "Token and new password required" });
 
-  try {
-    const [user] = await db.query("SELECT id FROM Users WHERE reset_token = ? AND reset_token_expiry > NOW()", [token]);
-    if (!user) return res.status(400).json({ error: "Invalid or expired token" });
+//   try {
+//     const [user] = await db.query("SELECT id FROM Users WHERE reset_token = ? AND reset_token_expiry > NOW()", [token]);
+//     if (!user) return res.status(400).json({ error: "Invalid or expired token" });
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+//     const hashedPassword = await bcrypt.hash(newPassword, 10); // Hash the new password
 
-    await db.query("UPDATE Users SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE id = ?", [hashedPassword, user.id]);
+//     // Update the user's password and clear the reset token
+//     await db.query("UPDATE Users SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE id = ?", [hashedPassword, user.id]);
 
-    res.json({ message: "Password successfully reset" });
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
-  }
-});
+//     res.json({ message: "Password successfully reset" });
+//   } catch (err) {
+//     res.status(500).json({ error: "Server error" });
+//   }
+// });
 
-// **Protected Route (Example API Call)**
-app.get("/data", authenticateUser, async (req, res) => {
-  res.json({ message: "Here is your protected data", user: req.user });
-});
+// // **Logout Route** - Clears the cookie with the JWT token
+// app.post("/logout", (req, res) => {
+//   res.clearCookie("token"); // Clear the token cookie
+//   res.json({ message: "Logged out successfully" });
+// });
 
-// **Logout**
-app.post("/logout", (req, res) => {
-  res.clearCookie("token");
-  res.json({ message: "Logged out successfully" });
-});
-
-// **Start Server**
+// Start the server on the specified port
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
