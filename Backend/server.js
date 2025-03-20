@@ -170,23 +170,52 @@ app.get("/admin/api-data", authenticateAdmin, async (req, res) => {
 });
 
 // **AI Response Route** - Integrates with Hugging Face API to generate responses
+// app.get("/ai-response", authenticateUser, async (req, res) => {
+//   const { prompt } = req.query;
+//   if (!prompt) return res.status(400).json({ error: "Prompt is required" });
+
+//   try {
+//     const chatCompletion = await client.chatCompletion({
+//       model: "deepseek-ai/DeepSeek-R1",
+//       messages: [
+//         { role: "user", content: "please tell me a story about" + prompt }
+//       ],
+//       provider: "together",
+//       max_tokens: 20,
+//     });
+//     let answer = chatCompletion.choices[0].message; // Extract the response from the model
+//     return res.status(200).json({ answer });
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+
 app.get("/ai-response", authenticateUser, async (req, res) => {
   const { prompt } = req.query;
   if (!prompt) return res.status(400).json({ error: "Prompt is required" });
 
   try {
-    const chatCompletion = await client.chatCompletion({
-      model: "deepseek-ai/DeepSeek-R1",
-      messages: [
-        { role: "user", content: "please tell me a story about" + prompt }
-      ],
-      provider: "together",
-      max_tokens: 20,
+    // Send request to the locally running Ollama server
+    const response = await fetch("http://127.0.0.0:11435/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "deepseek-r1",
+        prompt: `Please tell me a story about ${prompt}`,
+      }),
     });
-    let answer = chatCompletion.choices[0].message; // Extract the response from the model
-    return res.status(200).json({ answer });
+
+    if (!response.ok) {
+      throw new Error(`AI server error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const generatedText = data.response || "No response received.";
+
+    return res.status(200).json({ answer: generatedText });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("AI request failed:", err.message);
+    return res.status(500).json({ error: "AI service unavailable" });
   }
 });
 
