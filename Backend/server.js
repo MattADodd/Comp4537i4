@@ -157,7 +157,7 @@ app.get("/admin/api-data", authenticateAdmin, async (req, res) => {
   }
 });
 
-app.get("/ai-response", async (req, res) => {
+app.get("/ai-response", authenticateUser, async (req, res) => {
   const { prompt } = req.query;
   if (!prompt) return res.status(400).json({ error: "Prompt is required" });
 
@@ -171,7 +171,7 @@ app.get("/ai-response", async (req, res) => {
         }
       ],
       provider: "together",
-      max_tokens: 50,
+      max_tokens: 20,
     });
     let answer = chatCompletion.choices[0].message;
     return res.status(200).json({ answer });
