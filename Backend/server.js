@@ -176,7 +176,7 @@ app.get("/ai-response", async (req, res) => {
     let answer = chatCompletion.choices[0].message;
     return res.status(200).json({ answer });
   } catch (err) {
-    res.status(500).json({ error: "Error with Hugging Face API" });
+    res.status(500).json({ error: err.message });
   }
 });
 
