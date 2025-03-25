@@ -648,7 +648,7 @@ app.get('/admin/api-stats', authenticateAdmin, async (req, res) => {
     res.json({ apiStats: results });
   } catch (error) {
     console.error('Error fetching API stats:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
 
