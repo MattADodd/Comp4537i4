@@ -426,8 +426,8 @@ function showSuccess(message) {
 
 // Function to fetch and display API stats for the admin
 function fetchApiStats() {
-  const token = localStorage.getItem('token') || '';
-  console.log('Token:', token); // Log token to ensure it's available 
+  
+
   fetch("https://whale-app-2-zoykf.ondigitalocean.app/admin/api-stats", {
     method: "GET",
     credentials: "include",
@@ -457,6 +457,7 @@ function fetchApiStats() {
 
 // Function to populate the API stats table
 function populateApiStatsTable(stats) {
+  console.log("inside populateAPI")
   const tableBody = document.getElementById("apiStatsTable");
 
   // Clear existing table rows
