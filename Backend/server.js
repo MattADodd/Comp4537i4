@@ -35,7 +35,7 @@ app.use(cors({
     "http://localhost:5500",   // Allow localhost requests for development
     "http://127.0.0.1:5500",
     "https://comp4537i4.vercel.app",
-    "https://47e0-142-232-152-19.ngrok-free.app"    // Allow requests from production frontend
+    "https://3ca3-2604-3d08-6579-c800-24a8-4a9e-92f4-9343.ngrok-free.app/api/generate"    // Allow requests from production frontend
   ],
   methods: ["GET", "POST", "DELETE, PUT"], // Allow only GET | POST | DELETE | PUT requests
   credentials: true, // Allow cookies to be sent along with requests
@@ -262,7 +262,7 @@ app.get("/ai-response", authenticateUser, async (req, res) => {
 
   try {
     // Send request to the locally running Ollama server
-    const response = await fetch("https://47e0-142-232-152-19.ngrok-free.app/api/generate", {
+    const response = await fetch("https://3ca3-2604-3d08-6579-c800-24a8-4a9e-92f4-9343.ngrok-free.app/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
