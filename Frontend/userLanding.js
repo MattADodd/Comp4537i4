@@ -6,7 +6,7 @@ async function getResponse() {
     }
 
     try {
-        const response = await fetch("https://whale-app-2-zoykf.ondigitalocean.app/ai-response" + encodeURIComponent(prompt), {
+        const response = await fetch("https://whale-app-2-zoykf.ondigitalocean.app/ai-response?prompt=" + encodeURIComponent(prompt), {
             method: "GET",
             credentials: "include"
         });
