@@ -458,7 +458,7 @@ function fetchApiStats() {
 // Function to populate the API stats table
 function populateApiStatsTable(stats) {
   console.log("inside populateAPI")
-  const tableBody = document.getElementById("apiStatsTable");
+  const tableBody = document.querySelector("#apiStatsTable tbody");
 
   // Clear existing table rows
   tableBody.innerHTML = '';
