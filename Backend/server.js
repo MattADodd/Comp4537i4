@@ -24,8 +24,7 @@ const SECRET_KEY = process.env.JWT_SECRET;
 app.options("*", (req, res) => {
   res.header("Access-Control-Allow-Origin", "https://comp4537i4.vercel.app"); // Allow frontend to make requests
   res.header("Access-Control-Allow-Credentials", "true"); // Allow cookies in CORS requests
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS"); // Allow necessary HTTP methods
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE"); // Add DELETE here
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE"); // Allow necessary HTTP methods
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization"); // Allow necessary headers
   res.sendStatus(204); // No content response
 });
