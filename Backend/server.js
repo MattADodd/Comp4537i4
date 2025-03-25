@@ -37,7 +37,7 @@ app.use(cors({
     "https://comp4537i4.vercel.app",
     "https://47e0-142-232-152-19.ngrok-free.app"    // Allow requests from production frontend
   ],
-  methods: ["GET", "POST"], // Allow only GET and POST requests
+  methods: ["GET", "POST", "DELETE"], // Allow only GET | POST | DELETE requests
   credentials: true, // Allow cookies to be sent along with requests
   allowedHeaders: ["Content-Type", "Authorization"], // Allow necessary headers
 }));
