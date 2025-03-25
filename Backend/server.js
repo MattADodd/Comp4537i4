@@ -200,8 +200,7 @@ app.get("/admin/api-data", authenticateAdmin, async (req, res) => {
   try {
     // Fetch API stats and user consumption data
     const userStats = await db.query("SELECT id, firstName, email, api_calls FROM Users");
-    const [apiStats] = await db.query("SELECT method, endpoint, requests FROM API_Usage ORDER BY requests DESC");
-
+    
     res.json({apiStats, userStats }); // Return stats as JSON
   } catch (err) {
     console.error("Error fetching stats:", err);

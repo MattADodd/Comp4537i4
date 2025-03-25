@@ -199,32 +199,6 @@ function handleDeleteUser(user, row, button) {
   
 }
 
-//NEW
-async function fetchAdminData() {
-  const response = await fetch("/admin/api-data", { credentials: "include" });
-  const data = await response.json();
-
-  displayTable("#apiStatsTable", data.apiStats);
-}
-
-function displayTable(tableId, data) {
-  const tableBody = document.querySelector(tableId + " tbody");
-  tableBody.innerHTML = ""; // Clear existing rows
-
-  data.forEach(row => {
-    const tr = document.createElement("tr");
-    Object.values(row).forEach(value => {
-      const td = document.createElement("td");
-      td.textContent = value;
-      tr.appendChild(td);
-    });
-    tableBody.appendChild(tr);
-  });
-}
-
-fetchAdminData();
-
-//ENDNEW
 
 
 // Notification functions
