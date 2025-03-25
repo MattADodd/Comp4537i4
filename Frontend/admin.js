@@ -439,6 +439,7 @@ function fetchApiStats() {
   .then((response) => {
     if (!response.ok) {
       return response.json().then(errData => {
+        console.error("Error response text:", errData);
         throw new Error(errData.error || "Failed to fetch API stats");
       });
     }
