@@ -481,7 +481,7 @@ function populateApiStatsTable(stats) {
     // Request Count Cell
     const requestCountCell = document.createElement("td");
     requestCountCell.classList.add("px-6", "py-4", "text-sm", "font-medium", "text-gray-900");
-    requestCountCell.textContent = stat.request || 0;
+    requestCountCell.textContent = stat.requests || 0;
     row.appendChild(requestCountCell);
 
     // Append row to the table body
