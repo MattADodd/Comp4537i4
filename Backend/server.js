@@ -451,7 +451,7 @@ app.options("*", (req, res) => {
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization"); // Allow necessary headers
   res.sendStatus(204); // No content response
 });
-
+console.log("Server starting...")
 // CORS Middleware - Defines which origins and methods are allowed to make requests to this API
 app.use(cors({
   origin: [
