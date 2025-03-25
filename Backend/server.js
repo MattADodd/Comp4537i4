@@ -514,6 +514,7 @@ app.use(async (req, res, next) => {
   const method = req.method;
   const endpoint = req.originalUrl;
 
+  console.log("test")
   try {
     const query = `
       INSERT INTO API_Usage (method, endpoint, requests)
@@ -632,6 +633,22 @@ app.get("/admin/api-data", authenticateAdmin, async (req, res) => {
   } catch (err) {
     console.error("Error fetching stats:", err);
     res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+app.get('/admin/api-stats', async (req, res) => {
+  try {
+    const query = `
+      SELECT method, endpoint, request_count
+      FROM API_Usage
+      ORDER BY request_count DESC;
+    `;
+    const results = await db.query(query);
+    res.json({ apiStats: results });
+  } catch (error) {
+    console.error('Error fetching API stats:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
