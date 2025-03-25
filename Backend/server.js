@@ -511,10 +511,12 @@ db.query(CREATE_API_TABLE).then(() => {
 
 
 app.use(async (req, res, next) => {
+  
   const method = req.method;
   const endpoint = req.originalUrl;
+  console.log("API Usage Middleware: ", method, endpoint); 
 
-  console.log("test")
+  
   try {
     const query = `
       INSERT INTO API_Usage (method, endpoint, requests)
