@@ -466,10 +466,6 @@ app.use(cors({
 }));
 
 
-app.use((req, res, next) => {
-  console.log("Middleware hit:", req.method, req.originalUrl);
-  next();
-});
 
 
 // Middleware to parse JSON request bodies
