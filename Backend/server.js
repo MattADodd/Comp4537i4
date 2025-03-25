@@ -44,28 +44,6 @@ app.use(cors({
 
 
 
-//New
-app.use((req, res, next) => {
-  const method = req.method;
-  const endpoint = req.originalUrl;
-  
-  // Update request count in the API_Usage table
-  const query = `
-    INSERT INTO API_Usage (method, endpoint, requests)
-    VALUES ($1, $2, 1)
-    ON CONFLICT (method, endpoint) 
-    DO UPDATE SET request_count = API_Usage.request_count + 1, last_updated = CURRENT_TIMESTAMP;
-  `;
-  
-  db.query(query, [method, endpoint], (err, result) => {
-    if (err) {
-      console.error('Error updating API usage:', err);
-    }
-    next();  // Proceed with the request
-  });
-});
-//End new
-
 
 // Middleware to parse JSON request bodies
 app.use(express.json()); 
