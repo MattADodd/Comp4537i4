@@ -640,9 +640,9 @@ app.get("/admin/api-data", authenticateAdmin, async (req, res) => {
 app.get('/admin/api-stats', async (req, res) => {
   try {
     const query = `
-      SELECT method, endpoint, request_count
+      SELECT method, endpoint, requests
       FROM API_Usage
-      ORDER BY request_count DESC;
+      ORDER BY requests DESC;
     `;
     const results = await db.query(query);
     res.json({ apiStats: results });
