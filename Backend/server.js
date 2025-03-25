@@ -223,14 +223,27 @@ app.get("/ai-response", authenticateUser, async (req, res) => {
 app.delete("/admin/delete-user/:id", authenticateAdmin, async (req, res) => {
   try {
     const userId = req.params.id;
+    
+    // First check if user exists
+    const [user] = await db.query("SELECT id FROM Users WHERE id = ?", [userId]);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
-    // Delete user from database
-    await db.query("DELETE FROM Users WHERE id = ?", [userId]);
+    // Then delete
+    const result = await db.query("DELETE FROM Users WHERE id = ?", [userId]);
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "No user was deleted" });
+    }
 
     res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
-    console.error("Error deleting user:", error);
-    res.status(500).json({ error: "Failed to delete user" });
+    console.error("Detailed error deleting user:", error);
+    res.status(500).json({ 
+      error: "Failed to delete user",
+      details: error.message // Send more detailed error to client for debugging
+    });
   }
 });
 
