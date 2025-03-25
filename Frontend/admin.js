@@ -201,11 +201,10 @@ function handleDeleteUser(user, row, button) {
 
 //NEW
 async function fetchAdminData() {
-  const response = await fetch("/admin/api-stats", { credentials: "include" });
+  const response = await fetch("/admin/api-data", { credentials: "include" });
   const data = await response.json();
 
   displayTable("#apiStatsTable", data.apiStats);
-  displayTable("#userStatsTable", data.userStats);
 }
 
 function displayTable(tableId, data) {

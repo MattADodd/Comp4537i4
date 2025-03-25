@@ -200,27 +200,17 @@ app.get("/admin/api-data", authenticateAdmin, async (req, res) => {
   try {
     // Fetch API stats and user consumption data
     const userStats = await db.query("SELECT id, firstName, email, api_calls FROM Users");
+    const [apiStats] = await db.query("SELECT method, endpoint, requests FROM API_Usage ORDER BY requests DESC");
 
-    res.json({ userStats }); // Return stats as JSON
+    res.json({apiStats, userStats }); // Return stats as JSON
   } catch (err) {
     console.error("Error fetching stats:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-//NEW
-app.get("/admin/api-stats", authenticateAdmin, async (req, res) => {
-  try {
-    const [apiStats] = await db.query("SELECT method, endpoint, requests FROM API_Usage ORDER BY requests DESC");
-    const [userStats] = await db.query("SELECT id, firstName, email, api_calls FROM Users ORDER BY api_calls DESC");
 
-    res.json({ apiStats, userStats });
-  } catch (err) {
-    console.error("Error fetching API stats:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-//END NEW
+
 
 // **AI Response Route** - Integrates with Hugging Face API to generate responses
 // app.get("/ai-response", authenticateUser, async (req, res) => {
