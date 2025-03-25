@@ -637,7 +637,7 @@ app.get("/admin/api-data", authenticateAdmin, async (req, res) => {
 });
 
 
-app.get('/admin/api-stats', async (req, res) => {
+app.get('/admin/api-stats', authenticateAdmin, async (req, res) => {
   try {
     const query = `
       SELECT method, endpoint, requests
