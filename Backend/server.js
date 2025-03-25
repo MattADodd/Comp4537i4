@@ -62,10 +62,48 @@ const CREATE_USERS_TABLE = `
   ) ENGINE=InnoDB;
 `;
 
+//NEW
+const CREATE_API_TABLE = `
+CREATE TABLE IF NOT EXISTS API_Usage (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    method VARCHAR(10) NOT NULL,
+    endpoint VARCHAR(255) NOT NULL,
+    requests INT DEFAULT 1,
+    UNIQUE KEY unique_api (method, endpoint)
+)`;
+//ENDNEW
+
 // Execute the SQL query to create the Users table
 db.query(CREATE_USERS_TABLE).then(() => {
   console.log("Users table is ready.");
 }).catch(err => console.error("Error creating Users table:", err));
+
+
+//NEW
+// Execute the SQL query to create the API table
+db.query(CREATE_API_TABLE).then(() => {
+  console.log("API table is ready.");
+}).catch(err => console.error("Error creating API table:", err));
+
+
+app.use(async (req, res, next) => {
+  const method = req.method;
+  const endpoint = req.originalUrl.split("?")[0]; // Remove query params
+
+  try {
+    // Increment request count if endpoint exists, otherwise insert new record
+    await db.query(
+      "INSERT INTO API_Usage (method, endpoint, requests) VALUES (?, ?, 1) ON DUPLICATE KEY UPDATE requests = requests + 1",
+      [method, endpoint]
+    );
+  } catch (err) {
+    console.error("Error logging API usage:", err);
+  }
+
+  next();
+});
+
+//END NEW
 
 // Middleware to authenticate user via JWT and track API usage
 const authenticateUser = async (req, res, next) => {
@@ -169,6 +207,20 @@ app.get("/admin/api-data", authenticateAdmin, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
+//NEW
+app.get("/admin/api-stats", authenticateAdmin, async (req, res) => {
+  try {
+    const [apiStats] = await db.query("SELECT method, endpoint, requests FROM API_Usage ORDER BY requests DESC");
+    const [userStats] = await db.query("SELECT id, firstName, email, api_calls FROM Users ORDER BY api_calls DESC");
+
+    res.json({ apiStats, userStats });
+  } catch (err) {
+    console.error("Error fetching API stats:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+//END NEW
 
 // **AI Response Route** - Integrates with Hugging Face API to generate responses
 // app.get("/ai-response", authenticateUser, async (req, res) => {

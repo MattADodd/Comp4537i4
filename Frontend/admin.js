@@ -196,7 +196,37 @@ function handleDeleteUser(user, row, button) {
     button.textContent = "Delete";
     button.classList.remove("opacity-50");
   });
+  
 }
+
+//NEW
+async function fetchAdminData() {
+  const response = await fetch("/admin/api-stats", { credentials: "include" });
+  const data = await response.json();
+
+  displayTable("#apiStatsTable", data.apiStats);
+  displayTable("#userStatsTable", data.userStats);
+}
+
+function displayTable(tableId, data) {
+  const tableBody = document.querySelector(tableId + " tbody");
+  tableBody.innerHTML = ""; // Clear existing rows
+
+  data.forEach(row => {
+    const tr = document.createElement("tr");
+    Object.values(row).forEach(value => {
+      const td = document.createElement("td");
+      td.textContent = value;
+      tr.appendChild(td);
+    });
+    tableBody.appendChild(tr);
+  });
+}
+
+fetchAdminData();
+
+//ENDNEW
+
 
 // Notification functions
 function showError(message) {
@@ -220,3 +250,5 @@ function showSuccess(message) {
     notification.remove();
   }, 5000);
 }
+
+
