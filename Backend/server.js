@@ -42,6 +42,31 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"], // Allow necessary headers
 }));
 
+
+
+//New
+app.use((req, res, next) => {
+  const method = req.method;
+  const endpoint = req.originalUrl;
+  
+  // Update request count in the API_Usage table
+  const query = `
+    INSERT INTO API_Usage (method, endpoint, requests)
+    VALUES ($1, $2, 1)
+    ON CONFLICT (method, endpoint) 
+    DO UPDATE SET request_count = API_Usage.request_count + 1, last_updated = CURRENT_TIMESTAMP;
+  `;
+  
+  db.query(query, [method, endpoint], (err, result) => {
+    if (err) {
+      console.error('Error updating API usage:', err);
+    }
+    next();  // Proceed with the request
+  });
+});
+//End new
+
+
 // Middleware to parse JSON request bodies
 app.use(express.json()); 
 
@@ -62,7 +87,6 @@ const CREATE_USERS_TABLE = `
   ) ENGINE=InnoDB;
 `;
 
-//NEW
 const CREATE_API_TABLE = `
 CREATE TABLE IF NOT EXISTS API_Usage (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -71,7 +95,7 @@ CREATE TABLE IF NOT EXISTS API_Usage (
     requests INT DEFAULT 1,
     UNIQUE KEY unique_api (method, endpoint)
 )`;
-//ENDNEW
+
 
 // Execute the SQL query to create the Users table
 db.query(CREATE_USERS_TABLE).then(() => {
@@ -79,7 +103,7 @@ db.query(CREATE_USERS_TABLE).then(() => {
 }).catch(err => console.error("Error creating Users table:", err));
 
 
-//NEW
+
 // Execute the SQL query to create the API table
 db.query(CREATE_API_TABLE).then(() => {
   console.log("API table is ready.");
