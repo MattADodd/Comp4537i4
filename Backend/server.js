@@ -24,7 +24,7 @@ const SECRET_KEY = process.env.JWT_SECRET;
 app.options("*", (req, res) => {
   res.header("Access-Control-Allow-Origin", "https://comp4537i4.vercel.app"); // Allow frontend to make requests
   res.header("Access-Control-Allow-Credentials", "true"); // Allow cookies in CORS requests
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE"); // Allow necessary HTTP methods
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT"); // Allow necessary HTTP methods
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization"); // Allow necessary headers
   res.sendStatus(204); // No content response
 });
@@ -37,7 +37,7 @@ app.use(cors({
     "https://comp4537i4.vercel.app",
     "https://47e0-142-232-152-19.ngrok-free.app"    // Allow requests from production frontend
   ],
-  methods: ["GET", "POST", "DELETE"], // Allow only GET | POST | DELETE requests
+  methods: ["GET", "POST", "DELETE, PUT"], // Allow only GET | POST | DELETE | PUT requests
   credentials: true, // Allow cookies to be sent along with requests
   allowedHeaders: ["Content-Type", "Authorization"], // Allow necessary headers
 }));
@@ -284,6 +284,68 @@ app.delete("/admin/delete-user/:id", authenticateAdmin, async (req, res) => {
     res.status(500).json({ 
       error: "Failed to delete user",
       details: error.message // Send more detailed error to client for debugging
+    });
+  }
+});
+
+// PUT endpoint to update user data (including API call count)
+app.put("/admin/update-user/:id", authenticateAdmin, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { firstName, email, api_calls, is_admin } = req.body;
+
+    // Validate at least one field is being updated
+    if (!firstName && !email && api_calls === undefined && is_admin === undefined) {
+      return res.status(400).json({ error: "No fields to update provided" });
+    }
+
+    // Build the dynamic update query
+    const updateFields = [];
+    const updateValues = [];
+    
+    if (firstName !== undefined) {
+      updateFields.push("firstName = ?");
+      updateValues.push(firstName);
+    }
+    
+    if (email !== undefined) {
+      updateFields.push("email = ?");
+      updateValues.push(email);
+    }
+    
+    if (api_calls !== undefined) {
+      updateFields.push("api_calls = ?");
+      updateValues.push(api_calls);
+    }
+    
+    if (is_admin !== undefined) {
+      updateFields.push("is_admin = ?");
+      updateValues.push(is_admin);
+    }
+
+    updateValues.push(userId); // Add userId for WHERE clause
+
+    const query = `UPDATE Users SET ${updateFields.join(", ")} WHERE id = ?`;
+    
+    // Execute the update
+    const result = await db.query(query, updateValues);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "User not found or no changes made" });
+    }
+
+    res.json({ message: "User updated successfully" });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    
+    // Handle duplicate email error
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({ error: "Email already in use" });
+    }
+    
+    res.status(500).json({ 
+      error: "Failed to update user",
+      details: error.message 
     });
   }
 });
