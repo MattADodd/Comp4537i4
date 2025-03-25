@@ -24,6 +24,7 @@ async function getResponse() {
 // Send a GET request to the "/dashboard" endpoint
 fetch("https://whale-app-2-zoykf.ondigitalocean.app/dashboard", {
     method: "GET",
+    headers: { "Content-Type": "application/json" },
     credentials: "include", // Ensure cookies are sent with the request
 })
 .then((response) => response.json())
