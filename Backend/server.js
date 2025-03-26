@@ -21,32 +21,18 @@ const client = new InferenceClient(process.env.HUGGINGFACE_API_KEY);
 const SECRET_KEY = process.env.JWT_SECRET;
 
 // Preflight (OPTIONS) request handling to allow CORS for specific methods
-const allowedOrigins = [
-  'https://comp4537i4.vercel.app',
-  'https://3ca3-2604-3d08-6579-c800-24a8-4a9e-92f4-9343.ngrok-free.app'
-];
-
 app.options("*", (req, res) => {
-  const origin = req.headers.origin;
-  
-  if (allowedOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin); // Dynamically set origin
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  }
-  
-  res.sendStatus(204);
+  res.header("Access-Control-Allow-Origin", "*"); // Allow frontend to make requests
+  // res.header("Access-Control-Allow-Origin", "https://3ca3-2604-3d08-6579-c800-24a8-4a9e-92f4-9343.ngrok-free.app");
+  res.header("Access-Control-Allow-Credentials", "true"); // Allow cookies in CORS requests
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT"); // Allow necessary HTTP methods
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization"); // Allow necessary headers
+  res.sendStatus(204); // No content response
 });
 console.log("Server starting...")
 // CORS Middleware - Defines which origins and methods are allowed to make requests to this API
 app.use(cors({
-  origin: [
-    "http://localhost:5500",   // Allow localhost requests for development
-    "http://127.0.0.1:5500",
-    "https://comp4537i4.vercel.app",
-    "https://3ca3-2604-3d08-6579-c800-24a8-4a9e-92f4-9343.ngrok-free.app"    // Allow requests from production frontend
-  ],
+  origin: '*',
   methods: ["GET", "POST", "DELETE", "PUT"], // Allow only GET | POST | DELETE | PUT requests
   credentials: true, // Allow cookies to be sent along with requests
   allowedHeaders: ["Content-Type", "Authorization", "Access-Control-Allow-Origin"], // Allow necessary headers
