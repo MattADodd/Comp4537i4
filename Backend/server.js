@@ -21,13 +21,22 @@ const client = new InferenceClient(process.env.HUGGINGFACE_API_KEY);
 const SECRET_KEY = process.env.JWT_SECRET;
 
 // Preflight (OPTIONS) request handling to allow CORS for specific methods
+const allowedOrigins = [
+  'https://comp4537i4.vercel.app',
+  'https://3ca3-2604-3d08-6579-c800-24a8-4a9e-92f4-9343.ngrok-free.app'
+];
+
 app.options("*", (req, res) => {
-  res.header("Access-Control-Allow-Origin", "https://comp4537i4.vercel.app"); // Allow frontend to make requests
-  // res.header("Access-Control-Allow-Origin", "https://3ca3-2604-3d08-6579-c800-24a8-4a9e-92f4-9343.ngrok-free.app");
-  res.header("Access-Control-Allow-Credentials", "true"); // Allow cookies in CORS requests
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT"); // Allow necessary HTTP methods
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization"); // Allow necessary headers
-  res.sendStatus(204); // No content response
+  const origin = req.headers.origin;
+  
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin); // Dynamically set origin
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  }
+  
+  res.sendStatus(204);
 });
 console.log("Server starting...")
 // CORS Middleware - Defines which origins and methods are allowed to make requests to this API
