@@ -23,7 +23,6 @@ const SECRET_KEY = process.env.JWT_SECRET;
 // Preflight (OPTIONS) request handling to allow CORS for specific methods
 app.options("*", (req, res) => {
   res.header("Access-Control-Allow-Origin", "https://comp4537i4.vercel.app"); // Allow frontend to make requests
-  // res.header("Access-Control-Allow-Origin", "https://3ca3-2604-3d08-6579-c800-24a8-4a9e-92f4-9343.ngrok-free.app");
   res.header("Access-Control-Allow-Credentials", "true"); // Allow cookies in CORS requests
   res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT"); // Allow necessary HTTP methods
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization"); // Allow necessary headers
@@ -36,7 +35,7 @@ app.use(cors({
     "http://localhost:5500",   // Allow localhost requests for development
     "http://127.0.0.1:5500",
     "https://comp4537i4.vercel.app",
-    "https://3ca3-2604-3d08-6579-c800-24a8-4a9e-92f4-9343.ngrok-free.app"    // Allow requests from production frontend
+    "https://20c5-2604-3d08-6579-c800-19a1-7955-3377-26c3.ngrok-free.app"    // Allow requests from production frontend
   ],
   methods: ["GET", "POST", "DELETE", "PUT"], // Allow only GET | POST | DELETE | PUT requests
   credentials: true, // Allow cookies to be sent along with requests
@@ -261,15 +260,15 @@ app.get("/ai-response", authenticateUser, async (req, res) => {
   const { prompt } = req.query;
   if (!prompt) return res.status(400).json({ error: "Prompt is required" });
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 300000);  // 5 minutes timeout
+
   try {
-    // Send request to the locally running Ollama server
-    const response = await fetch("https://3ca3-2604-3d08-6579-c800-24a8-4a9e-92f4-9343.ngrok-free.app/api/generate", {
+    const response = await fetch("https://20c5-2604-3d08-6579-c800-19a1-7955-3377-26c3.ngrok-free.app/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "deepseek-r1",
-        prompt: `Please tell me a story about ${prompt}`,
-      }),
+      body: JSON.stringify({ prompt }),
+      signal: controller.signal,
     });
 
     if (!response.ok) {
@@ -278,9 +277,10 @@ app.get("/ai-response", authenticateUser, async (req, res) => {
 
     const data = await response.json();
     const generatedText = data.response || "No response received.";
-
+    clearTimeout(timeoutId);  // Clear timeout once the request is complete
     return res.status(200).json({ answer: generatedText });
   } catch (err) {
+    clearTimeout(timeoutId);  // Ensure timeout is cleared in case of failure
     console.error("AI request failed:", err.message);
     return res.status(500).json({ error: "AI service unavailable" });
   }

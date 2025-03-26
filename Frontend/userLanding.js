@@ -5,24 +5,35 @@ async function getResponse() {
         return;
     }
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 120000); // 2-minute timeout
+
     try {
         const response = await fetch("https://whale-app-2-zoykf.ondigitalocean.app/ai-response?prompt=" + encodeURIComponent(prompt), {
             method: "GET",
             credentials: "include",
             headers: {
                 "Content-Type": "application/json"
-            }
+            },
+            signal: controller.signal // Allows request cancellation
         });
+
+        clearTimeout(timeout); // Prevent timeout from triggering
+
         const data = await response.json();
-
         const answerText = data.answer?.content || "No response received";
-
         document.getElementById("response").value = answerText;
     } catch (error) {
-        console.error("Error fetching response:", error);
-        document.getElementById("response").value = "Error retrieving response";
+        if (error.name === "AbortError") {
+            console.error("Request timed out!");
+            document.getElementById("response").value = "Request timed out. Try again.";
+        } else {
+            console.error("Error fetching response:", error);
+            document.getElementById("response").value = "Error retrieving response";
+        }
     }
 }
+
 
 // Send a GET request to the "/dashboard" endpoint
 fetch("https://whale-app-2-zoykf.ondigitalocean.app/dashboard", {
