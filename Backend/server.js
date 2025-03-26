@@ -40,7 +40,7 @@ app.use(cors({
   ],
   methods: ["GET", "POST", "DELETE", "PUT"], // Allow only GET | POST | DELETE | PUT requests
   credentials: true, // Allow cookies to be sent along with requests
-  allowedHeaders: ["Content-Type", "Authorization", "Access-Control-Allow-Origin"], // Allow necessary headers
+  allowedHeaders: ["Content-Type", "Authorization", "Access-Control-Allow-Origin", "Access-Control-Allow-Headers"], // Allow necessary headers
 }));
 
 
