@@ -22,7 +22,7 @@ const SECRET_KEY = process.env.JWT_SECRET;
 
 // Preflight (OPTIONS) request handling to allow CORS for specific methods
 app.options("*", (req, res) => {
-  // res.header("Access-Control-Allow-Origin", "https://comp4537i4.vercel.app"); // Allow frontend to make requests
+  res.header("Access-Control-Allow-Origin", "https://comp4537i4.vercel.app"); // Allow frontend to make requests
   res.header("Access-Control-Allow-Credentials", "true"); // Allow cookies in CORS requests
   res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT"); // Allow necessary HTTP methods
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization"); // Allow necessary headers
