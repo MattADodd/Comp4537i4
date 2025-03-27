@@ -22,8 +22,10 @@ async function getResponse() {
 
         const data = await response.json();
         const answerText = data.answer
-        document.getElementById("response").value = answerText;
-        textToSpeech(answerText);
+        const regex = /(.*?)<think>.*?<\/think>(.*)/s;
+        const matches = answerText.match(regex);
+        document.getElementById("response").value = matches[2];
+        textToSpeech(matches[2]);
     } catch (error) {
         if (error.name === "AbortError") {
             console.error("Request timed out!");
