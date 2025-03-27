@@ -23,6 +23,7 @@ async function getResponse() {
         const data = await response.json();
         const answerText = data.answer
         document.getElementById("response").value = answerText;
+        textToSpeech(answerText);
     } catch (error) {
         if (error.name === "AbortError") {
             console.error("Request timed out!");
@@ -32,6 +33,19 @@ async function getResponse() {
             document.getElementById("response").value = "Error retrieving response";
         }
     }
+}
+
+function textToSpeech(text) {
+    const speechSynthesis = window.speechSynthesis;
+    const utterance = new SpeechSynthesisUtterance(text);
+
+    // Optional: set the voice and language
+    const voices = speechSynthesis.getVoices();
+    utterance.voice = voices[0]; // Default voice
+    utterance.lang = 'en-US'; // Set the language to English (US)
+
+    // Speak the text
+    speechSynthesis.speak(utterance);
 }
 
 
