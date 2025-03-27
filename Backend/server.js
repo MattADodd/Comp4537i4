@@ -35,7 +35,7 @@ app.use(cors({
     "http://localhost:5500",   // Allow localhost requests for development
     "http://127.0.0.1:5500",
     "https://comp4537i4.vercel.app",
-    "https://c8db-2604-3d08-6579-c800-19a1-7955-3377-26c3.ngrok-free.app"    // Allow requests from production frontend
+    "https://d496-2604-3d08-6579-c800-19a1-7955-3377-26c3.ngrok-free.app"    // Allow requests from production frontend
   ],
   methods: ["GET", "POST", "DELETE", "PUT"], // Allow only GET | POST | DELETE | PUT requests
   credentials: true, // Allow cookies to be sent along with requests
@@ -262,7 +262,7 @@ app.get("/ai-response", authenticateUser, async (req, res) => {
   const model = "deepseek-r1";
 
   try {
-    const response = await fetch("https://c8db-2604-3d08-6579-c800-19a1-7955-3377-26c3.ngrok-free.app/api/generate", {
+    const response = await fetch("https://d496-2604-3d08-6579-c800-19a1-7955-3377-26c3.ngrok-free.app/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
