@@ -21,7 +21,7 @@ async function getResponse() {
         clearTimeout(timeout); // Prevent timeout from triggering
 
         const data = await response.json();
-        const answerText = data.answer?.content || "No response received";
+        const answerText = data.answer
         document.getElementById("response").value = answerText;
     } catch (error) {
         if (error.name === "AbortError") {
