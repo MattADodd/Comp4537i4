@@ -273,12 +273,19 @@ app.get("/ai-response", authenticateUser, async (req, res) => {
     if (!response.ok) {
       throw new Error(`AI server error: ${response.statusText}`);
     }
-    console.log(response);
-    const data = await response.text();
-    console.log(data);
-    const generatedText = data.response || "No response received.";
-    clearTimeout(timeoutId);  // Clear timeout once the request is complete
-    return res.status(200).json({ answer: generatedText });
+    const text = await response.text(); // Read full NDJSON response
+  console.log("Raw response:", text);
+
+  // Parse NDJSON and extract message
+  const fullMessage = text
+    .trim()
+    .split("\n") // Each line is a separate JSON object
+    .map(line => JSON.parse(line).response) // Extract "response" field
+    .join(""); // Combine into a single message
+
+  console.log("Full message:", fullMessage);
+
+  return res.status(200).json({ answer: fullMessage });
   } catch (err) {
     clearTimeout(timeoutId);  // Ensure timeout is cleared in case of failure
     console.error("AI request failed:", err.message);
