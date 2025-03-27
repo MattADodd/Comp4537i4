@@ -15,17 +15,27 @@ async function getResponse() {
             headers: {
                 "Content-Type": "application/json"
             },
-            // signal: controller.signal // Allows request cancellation
+            signal: controller.signal // Allows request cancellation
         });
 
         clearTimeout(timeout); // Prevent timeout from triggering
 
         const data = await response.json();
-        const answerText = data.answer
-        const regex = /(.*?)<think>.*?<\/think>(.*)/s;
+        const answerText = data.answer;
+
+        // Regular expression to match content outside of <think>...</think> tags
+        const regex = /<think>.*?<\/think>(.*)/s;
         const matches = answerText.match(regex);
-        document.getElementById("response").value = matches[2];
-        textToSpeech(matches[2]);
+
+        if (matches && matches[1]) {
+            const answer = matches[1].trim();  // Get the text after the <think> tags
+            document.getElementById("response").value = answer;
+            textToSpeech(answer);
+        } else {
+            // If no <think> tags found, display the entire answer
+            document.getElementById("response").value = answerText;
+            textToSpeech(answerText);
+        }
     } catch (error) {
         if (error.name === "AbortError") {
             console.error("Request timed out!");
@@ -49,6 +59,7 @@ function textToSpeech(text) {
     // Speak the text
     speechSynthesis.speak(utterance);
 }
+
 
 
 // Send a GET request to the "/dashboard" endpoint
