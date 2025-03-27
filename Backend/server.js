@@ -274,7 +274,8 @@ app.get("/ai-response", authenticateUser, async (req, res) => {
       throw new Error(`AI server error: ${response.statusText}`);
     }
     console.log(response);
-    const data = await response.json();
+    const data = await response.text();
+    console.log(data);
     const generatedText = data.response || "No response received.";
     clearTimeout(timeoutId);  // Clear timeout once the request is complete
     return res.status(200).json({ answer: generatedText });
