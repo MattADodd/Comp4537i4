@@ -254,7 +254,7 @@ app.get('/admin/api-stats', authenticateAdmin, async (req, res) => {
 // });
 
 app.get("/ai-response", authenticateUser, async (req, res) => {
-  const { prompt } = req.query;
+  const { prompt } = "Please tell me a story about " + req.query;
   if (!prompt) return res.status(400).json({ error: "Prompt is required" });
 
   const controller = new AbortController();
