@@ -42,9 +42,6 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization", "Access-Control-Allow-Origin", "Access-Control-Allow-Headers"], // Allow necessary headers
 }));
 
-
-
-
 // Middleware to parse JSON request bodies
 app.use(express.json()); 
 
@@ -268,7 +265,7 @@ app.get("/ai-response", authenticateUser, async (req, res) => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt }),
-      signal: controller.signal,
+      // signal: controller.signal,
     });
 
     if (!response.ok) {

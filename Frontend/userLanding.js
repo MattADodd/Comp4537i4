@@ -15,7 +15,7 @@ async function getResponse() {
             headers: {
                 "Content-Type": "application/json"
             },
-            signal: controller.signal // Allows request cancellation
+            // signal: controller.signal // Allows request cancellation
         });
 
         clearTimeout(timeout); // Prevent timeout from triggering
