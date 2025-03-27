@@ -264,6 +264,7 @@ app.get("/ai-response", authenticateUser, async (req, res) => {
     const response = await fetch("https://20c5-2604-3d08-6579-c800-19a1-7955-3377-26c3.ngrok-free.app/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ prompt }),
       // signal: controller.signal,
     });
