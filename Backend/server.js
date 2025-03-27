@@ -259,7 +259,7 @@ app.get("/ai-response", authenticateUser, async (req, res) => {
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 300000);  // 5 minutes timeout
-  const model = "deepseek-r1";
+  const model = "deepseek-r1:1.5b";
 
   try {
     const response = await fetch("https://d496-2604-3d08-6579-c800-19a1-7955-3377-26c3.ngrok-free.app/api/generate", {
