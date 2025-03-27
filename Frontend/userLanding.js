@@ -6,7 +6,7 @@ async function getResponse() {
     }
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 120000); // 2-minute timeout
+    const timeout = setTimeout(() => controller.abort(), 360000); // 2-minute timeout
 
     try {
         const response = await fetch("https://whale-app-2-zoykf.ondigitalocean.app/ai-response?prompt=" + encodeURIComponent(prompt), {
