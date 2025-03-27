@@ -24,7 +24,7 @@ async function getResponse() {
         const answerText = data.answer;
 
         // Regular expression to match content outside of <think>...</think> tags
-        const regex = /<think>.*?<\/think>(.*)/s;
+        const regex = /<think>.*?<\/think>\s*(.*)/s;
         const matches = answerText.match(regex);
 
         if (matches && matches[1]) {
