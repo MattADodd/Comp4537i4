@@ -1,5 +1,5 @@
 async function getResponse() {
-    const prompt = document.getElementById("prompt").value;
+    const prompt = "Please write me a short story about" + document.getElementById("prompt").value;
     if (!prompt) {
         alert("Please enter a prompt");
         return;
@@ -15,7 +15,6 @@ async function getResponse() {
             headers: {
                 "Content-Type": "application/json"
             },
-            // signal: controller.signal // Allows request cancellation
         });
 
         clearTimeout(timeout); // Prevent timeout from triggering

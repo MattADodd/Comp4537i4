@@ -267,7 +267,6 @@ app.get("/ai-response", authenticateUser, async (req, res) => {
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({ model, prompt }),
-      // signal: controller.signal,
     });
     
     if (!response.ok) {
