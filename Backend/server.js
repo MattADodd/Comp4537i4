@@ -269,11 +269,11 @@ app.get("/ai-response", authenticateUser, async (req, res) => {
       body: JSON.stringify({ model, prompt }),
       // signal: controller.signal,
     });
-
+    
     if (!response.ok) {
       throw new Error(`AI server error: ${response.statusText}`);
     }
-
+    console.log(response);
     const data = await response.json();
     const generatedText = data.response || "No response received.";
     clearTimeout(timeoutId);  // Clear timeout once the request is complete
