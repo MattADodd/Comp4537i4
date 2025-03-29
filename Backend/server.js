@@ -32,10 +32,6 @@ const swaggerOptions = {
   apis: ["./server.js"],
 };
 
-module.exports = (app) => {
-  app.use("/doc", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-};
-
 // Initialize Hugging Face client
 const { InferenceClient } = require('@huggingface/inference');
 const client = new InferenceClient(process.env.HUGGINGFACE_API_KEY);
@@ -169,6 +165,8 @@ const authenticateAdmin = async (req, res, next) => {
 
 
 
+const swaggerDocs = swaggerJsdoc(swaggerOptions);
+app.use("/doc", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // **User Registration Route**
 app.post("/register", async (req, res) => {
