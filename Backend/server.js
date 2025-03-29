@@ -12,6 +12,25 @@ const db = require("../modules/dbHandler.js"); // Database module for interactin
 const axios = require("axios"); // For making HTTP requests to external APIs like Hugging Face
 const app = express(); // Initialize Express app
 const PORT = 3000; // Port where the server will run
+const swaggerJsdoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
+
+// Swagger configuration options
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "AI Music API",
+      version: "1.0.0",
+      description: "API for AI-powered music generation and user authentication",
+    },
+    servers: [
+      { url: "http://localhost:3000", description: "Local development server" },
+      { url: "https://your-production-url.com", description: "Production server" }
+    ]
+  },
+  apis: ["./routes/*.js"], // Adjust the path to match where your route handlers are defined
+};
 
 // Initialize Hugging Face client
 const { InferenceClient } = require('@huggingface/inference');
