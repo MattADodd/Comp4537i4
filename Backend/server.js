@@ -29,7 +29,7 @@ const swaggerOptions = {
       { url: "https://comp4537i4.vercel.app", description: "Frontend server" }
     ]
   },
-  apis: ["./server.js"],
+  apis: ["./server.js", "./Frontend/*.js"],
 };
 
 // Initialize Hugging Face client
