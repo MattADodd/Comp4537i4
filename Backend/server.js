@@ -1,7 +1,11 @@
-// Load environment variables from .env file
+/**
+ * Load environment variables from .env file
+ */
 require("dotenv").config();
 
-// Import required dependencies
+/**
+ * Import required dependencies
+ */
 const express = require("express");
 const cors = require('cors'); // Import CORS to handle cross-origin requests
 const bcrypt = require('bcryptjs'); // For password hashing
@@ -15,7 +19,9 @@ const PORT = 3000; // Port where the server will run
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 
-// Swagger configuration options
+/**
+ * Swagger API Documentation configuration
+ */
 const swaggerOptions = {
   definition: {
     openapi: "3.0.0",
@@ -34,12 +40,20 @@ const swaggerOptions = {
 
 // Initialize Hugging Face client
 const { InferenceClient } = require('@huggingface/inference');
+
+/**
+ * Hugging Face API Client
+ */
 const client = new InferenceClient(process.env.HUGGINGFACE_API_KEY);
 
-// Secret key for JWT token verification
+/**
+ * JWT Secret Key
+ */
 const SECRET_KEY = process.env.JWT_SECRET;
 
-// Preflight (OPTIONS) request handling to allow CORS for specific methods
+/**
+ * Middleware to handle CORS preflight requests
+ */
 app.options("*", (req, res) => {
   res.header("Access-Control-Allow-Origin", "https://comp4537i4.vercel.app"); // Allow frontend to make requests
   res.header("Access-Control-Allow-Credentials", "true"); // Allow cookies in CORS requests
@@ -48,7 +62,10 @@ app.options("*", (req, res) => {
   res.sendStatus(204); // No content response
 });
 console.log("Server starting...")
-// CORS Middleware - Defines which origins and methods are allowed to make requests to this API
+
+/**
+ * Middleware setup
+ */
 app.use(cors({
   origin: [
     "http://localhost:5500",   // Allow localhost requests for development
@@ -67,7 +84,9 @@ app.use(express.json());
 // Middleware to parse cookies in requests
 app.use(cookieParser()); 
 
-// SQL Query to create Users table if it doesn't exist
+/**
+ * SQL Queries to create necessary database tables
+ */
 const CREATE_USERS_TABLE = `
   CREATE TABLE IF NOT EXISTS Users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -91,19 +110,20 @@ CREATE TABLE IF NOT EXISTS API_Usage (
 )`;
 
 
-// Execute the SQL query to create the Users table
+/**
+ * Execute table creation queries
+ */
 db.query(CREATE_USERS_TABLE).then(() => {
   console.log("Users table is ready.");
 }).catch(err => console.error("Error creating Users table:", err));
 
-
-
-// Execute the SQL query to create the API table
 db.query(CREATE_API_TABLE).then(() => {
   console.log("API table is ready.");
 }).catch(err => console.error("Error creating API table:", err));
 
-
+/**
+ * Middleware to log and update API usage
+ */
 app.use(async (req, res, next) => {
   
   const method = req.method;
@@ -126,7 +146,9 @@ app.use(async (req, res, next) => {
 });
 
 
-// Middleware to authenticate user via JWT and track API usage
+/**
+ * Middleware to authenticate users via JWT
+ */
 const authenticateUser = async (req, res, next) => {
   const token = req.cookies.token; // Get JWT token from cookies
   if (!token) return res.status(401).json({ error: "Unauthorized" }); // If no token, unauthorized
@@ -152,7 +174,9 @@ const authenticateUser = async (req, res, next) => {
   }
 };
 
-// Middleware to authenticate admin via JWT
+/**
+ * Middleware to authenticate admins via JWT
+ */
 const authenticateAdmin = async (req, res, next) => {
   const token = req.cookies.token; // Get JWT token from cookies
   const decoded = jwt.verify(token, SECRET_KEY); // Verify JWT
@@ -164,7 +188,9 @@ const authenticateAdmin = async (req, res, next) => {
 };
 
 
-
+/**
+ * Setup Swagger Documentation
+ */
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 app.use("/doc", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
@@ -187,7 +213,15 @@ app.post("/register", async (req, res) => {
   }
 });
 
-// **User Login Route**
+/**
+ * User Login Route
+ * @route POST /login
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body containing user credentials
+ * @param {string} req.body.email - User's email
+ * @param {string} req.body.password - User's password
+ * @param {Object} res - Express response object
+ */
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: "All fields required" });
@@ -209,7 +243,12 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// **User Dashboard Route** (View API Calls)
+/**
+ * User Dashboard Route
+ * @route GET /dashboard
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 app.get("/dashboard", async (req, res) => {
   const token = req.cookies.token; // Get JWT token from cookies
   const decoded = jwt.verify(token, SECRET_KEY); // Verify JWT
@@ -221,7 +260,13 @@ app.get("/dashboard", async (req, res) => {
   }
 });
 
-// **Admin Route** to View API Usage Data
+/**
+ * Admin API Usage Data Route
+ * @route GET /admin/api-data
+ * @middleware authenticateAdmin
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 app.get("/admin/api-data", authenticateAdmin, async (req, res) => {
   try {
     // Fetch API stats and user consumption data
@@ -233,7 +278,6 @@ app.get("/admin/api-data", authenticateAdmin, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-
 
 app.get('/admin/api-stats', authenticateAdmin, async (req, res) => {
   try {
@@ -250,30 +294,14 @@ app.get('/admin/api-stats', authenticateAdmin, async (req, res) => {
   }
 });
 
-
-
-
-// **AI Response Route** - Integrates with Hugging Face API to generate responses
-// app.get("/ai-response", authenticateUser, async (req, res) => {
-//   const { prompt } = req.query;
-//   if (!prompt) return res.status(400).json({ error: "Prompt is required" });
-
-//   try {
-//     const chatCompletion = await client.chatCompletion({
-//       model: "deepseek-ai/DeepSeek-R1",
-//       messages: [
-//         { role: "user", content: "please tell me a story about" + prompt }
-//       ],
-//       provider: "together",
-//       max_tokens: 20,
-//     });
-//     let answer = chatCompletion.choices[0].message; // Extract the response from the model
-//     return res.status(200).json({ answer });
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// });
-
+/**
+ * AI Response Route
+ * @route GET /ai-response
+ * @middleware authenticateUser
+ * @param {Object} req - Express request object
+ * @param {string} req.query.prompt - User's input prompt
+ * @param {Object} res - Express response object
+ */
 app.get("/ai-response", authenticateUser, async (req, res) => {
   const { prompt } = req.query;
   if (!prompt) return res.status(400).json({ error: "Prompt is required" });
@@ -313,6 +341,14 @@ app.get("/ai-response", authenticateUser, async (req, res) => {
   }
 });
 
+/**
+ * Admin Delete User Route
+ * @route DELETE /admin/delete-user/:id
+ * @middleware authenticateAdmin
+ * @param {Object} req - Express request object
+ * @param {string} req.params.id - User ID
+ * @param {Object} res - Express response object
+ */
 app.delete("/admin/delete-user/:id", authenticateAdmin, async (req, res) => {
   try {
     const userId = req.params.id;
@@ -340,7 +376,15 @@ app.delete("/admin/delete-user/:id", authenticateAdmin, async (req, res) => {
   }
 });
 
-// PUT endpoint to update user data (including API call count)
+/**
+ * Admin Update User Route
+ * @route PUT /admin/update-user/:id
+ * @middleware authenticateAdmin
+ * @param {Object} req - Express request object
+ * @param {string} req.params.id - User ID
+ * @param {Object} req.body - Fields to update (firstName, email, api_calls, is_admin)
+ * @param {Object} res - Express response object
+ */
 app.put("/admin/update-user/:id", authenticateAdmin, async (req, res) => {
   try {
     const userId = req.params.id;
@@ -455,7 +499,9 @@ app.put("/admin/update-user/:id", authenticateAdmin, async (req, res) => {
 //   res.json({ message: "Logged out successfully" });
 // });
 
-// Start the server on the specified port
+/**
+ * Start the server
+ */
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
