@@ -20,16 +20,20 @@ const swaggerOptions = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "AI Music API",
+      title: "AI Audio Book API",
       version: "1.0.0",
-      description: "API for AI-powered music generation and user authentication",
+      description: "API for AI Audio Book generation",
     },
     servers: [
-      { url: "http://localhost:3000", description: "Local development server" },
-      { url: "https://your-production-url.com", description: "Production server" }
+      { url: "https://whale-app-2-zoykf.ondigitalocean.app/", description: "Backend server" },
+      { url: "https://comp4537i4.vercel.app", description: "Frontend server" }
     ]
   },
-  apis: ["./routes/*.js"], // Adjust the path to match where your route handlers are defined
+  apis: ["./server.js"],
+};
+
+module.exports = (app) => {
+  app.use("/doc", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 };
 
 // Initialize Hugging Face client
