@@ -451,44 +451,62 @@ app.put("/admin/update-user/:id", authenticateAdmin, async (req, res) => {
 app.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: "Email is required" });
-
+  
   try {
-    const [user] = await db.query("SELECT id FROM Users WHERE email = ?", [email]);
-    if (!user) return res.status(404).json({ error: "Email not found" });
-
-    const resetToken = crypto.randomBytes(32).toString("hex"); // Generate reset token
-    const expiryTime = new Date(Date.now() + 15 * 60 * 1000); // 15-minute expiry
-
-    // Store the token and expiry in the database
+    // Check if user exists
+    const users = await db.query("SELECT id FROM Users WHERE email = ?", [email]);
+    if (!users.length) return res.status(404).json({ error: "Email not found" });
+    
+    // Generate secure token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    
+    // Set expiry time (15 minutes)
+    const expiryTime = new Date(Date.now() + 15 * 60 * 1000);
+    const expiryTimeFormatted = expiryTime.toISOString().slice(0, 19).replace('T', ' ');
+    
+    // Store token in database
     await db.query(
       "UPDATE Users SET reset_token = ?, reset_token_expiry = ? WHERE email = ?",
-      [resetToken, expiryTime, email]
+      [hashedToken, expiryTimeFormatted, email]
     );
-
+    
+    // Create reset link with unhashed token (for URL)
     const resetLink = `https://comp4537i4.vercel.app/Frontend/reset-password.html?token=${resetToken}`;
-
-    // **Send Email**
+    
+    // Set up email transport with environment variables
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "tdnreport@gmail.com", // Replace with your email
-        pass: "dwox lnui eyka jrxu", // Use an app password if needed
+        user: process.env.EMAIL_USER || "tdnreport@gmail.com",
+        pass: process.env.EMAIL_PASS || "your-app-password"
       },
     });
-
+    
+    // Configure email options
     const mailOptions = {
-      from: "tdnreport@gmail.com",
+      from: process.env.EMAIL_USER || "tdnreport@gmail.com",
       to: email,
       subject: "Password Reset Request",
       text: `Click the following link to reset your password: ${resetLink}\nThis link is valid for 15 minutes.`,
+      html: `<p>Click <a href="${resetLink}">here</a> to reset your password.</p><p>This link is valid for 15 minutes.</p>`
     };
-
+    
+    // Send email
     await transporter.sendMail(mailOptions);
-
+    
+    // Return success
     res.json({ message: "Password reset email sent." });
+    
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+    console.error("Password reset error:", err);
+    
+    // More specific error handling
+    if (err.code === 'EAUTH') {
+      return res.status(500).json({ error: "Email authentication failed" });
+    }
+    
+    res.status(500).json({ error: "Server error during password reset" });
   }
 });
 
