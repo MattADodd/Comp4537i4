@@ -1,4 +1,4 @@
-import messages from "../lang/messages/en/messages";
+import messages from "../lang/messages/en/messages.js";
 
 document.addEventListener("DOMContentLoaded", function () {
     // Get the token from the URL

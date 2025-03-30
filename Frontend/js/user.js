@@ -1,4 +1,4 @@
-import messages from "../lang/messages/en/messages";
+import messages from "../lang/messages/en/messages.js";
 
 async function getResponse() {
     const userPrompt = document.getElementById("prompt").value;

@@ -1,4 +1,4 @@
-import messages from "../lang/messages/en/messages";
+import messages from "../lang/messages/en/messages.js";
 
 // Login Form Submission
 document.querySelector("form").addEventListener("submit", async function (event) {
