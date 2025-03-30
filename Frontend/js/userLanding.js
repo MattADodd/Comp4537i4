@@ -1,4 +1,6 @@
 async function getResponse() {
+   
+   //Basic prompt for AI
     const prompt = "Please write me a short story about" + document.getElementById("prompt").value;
     if (!prompt) {
         alert("Please enter a prompt");
@@ -8,6 +10,7 @@ async function getResponse() {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 360000); // 2-minute timeout
 
+    //Get request to server for prompt response
     try {
         const response = await fetch("https://whale-app-2-zoykf.ondigitalocean.app/ai-response?prompt=" + encodeURIComponent(prompt), {
             method: "GET",
