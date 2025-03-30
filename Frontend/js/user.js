@@ -1,40 +1,40 @@
+import messages from "../lang/messages/en/messages";
+
 async function getResponse() {
-   
-   //Basic prompt for AI
-    const prompt = "Please write me a short story about" + document.getElementById("prompt").value;
-    if (!prompt) {
-        alert("Please enter a prompt");
+    const userPrompt = document.getElementById("prompt").value;
+    if (!userPrompt) {
+        alert(messages.aiResponse.emptyPrompt);
         return;
     }
 
+    const prompt = "Please write me a short story about " + userPrompt;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 360000); // 2-minute timeout
 
-    //Get request to server for prompt response
     try {
-        const response = await fetch("https://whale-app-2-zoykf.ondigitalocean.app/ai-response?prompt=" + encodeURIComponent(prompt), {
-            method: "GET",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json"
-            },
-        });
+        const response = await fetch(
+            `https://whale-app-2-zoykf.ondigitalocean.app/ai-response?prompt=${encodeURIComponent(prompt)}`,
+            {
+                method: "GET",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+            }
+        );
 
         clearTimeout(timeout); // Prevent timeout from triggering
 
         const data = await response.json();
-        let answerText = data.answer
-        const regex = /<think>[\s\S]*<\/think>/;
-        answerText = answerText.replace(regex, "").trim();
+        let answerText = data.answer.replace(/<think>[\s\S]*<\/think>/, "").trim();
+
         document.getElementById("response").value = answerText;
         textToSpeech(answerText);
     } catch (error) {
         if (error.name === "AbortError") {
             console.error("Request timed out!");
-            document.getElementById("response").value = "Request timed out. Try again.";
+            document.getElementById("response").value = messages.aiResponse.timeout;
         } else {
             console.error("Error fetching response:", error);
-            document.getElementById("response").value = "Error retrieving response";
+            document.getElementById("response").value = messages.aiResponse.error;
         }
     }
 }
@@ -43,34 +43,27 @@ function textToSpeech(text) {
     const speechSynthesis = window.speechSynthesis;
     const utterance = new SpeechSynthesisUtterance(text);
 
-    // Optional: set the voice and language
     const voices = speechSynthesis.getVoices();
-    utterance.voice = voices[0]; // Default voice
-    utterance.lang = 'en-US'; // Set the language to English (US)
+    utterance.voice = voices[0] || null; // Default voice
+    utterance.lang = "en-US";
 
-    // Speak the text
     speechSynthesis.speak(utterance);
 }
 
-// Send a GET request to the "/dashboard" endpoint
+// Fetch API Calls Left
 fetch("https://whale-app-2-zoykf.ondigitalocean.app/dashboard", {
     method: "GET",
-    credentials: "include", // Ensure cookies are sent with the request
+    credentials: "include",
 })
-.then((response) => response.json())
-.then((data) => {
-    // Check if the response contains 'api_calls' data
-    if (data.api_calls !== undefined) {
-        // Update the DOM with the number of API calls
-        const apiCallsText = document.getElementById("apiCallsText");
-        apiCallsText.textContent = `API Calls Left: ${20-data.api_calls}`;
-    } else {
-        // Handle unexpected response format
-        console.error("Unexpected response:", data);
-    }
-})
-.catch((error) => {
-    console.error("Error:", error);
-    const apiCallsText = document.getElementById("apiCallsText");
-    apiCallsText.textContent = "Failed to load API calls data.";
-});
+    .then((response) => response.json())
+    .then((data) => {
+        if (data.api_calls !== undefined) {
+            document.getElementById("apiCallsText").textContent = messages.apiCalls.remaining(20 - data.api_calls);
+        } else {
+            console.error("Unexpected response:", data);
+        }
+    })
+    .catch((error) => {
+        console.error("Error:", error);
+        document.getElementById("apiCallsText").textContent = messages.apiCalls.failed;
+    });

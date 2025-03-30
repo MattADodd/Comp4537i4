@@ -1,47 +1,47 @@
-signupForm.addEventListener("submit", async (event) => {
-    event.preventDefault(); 
+import messages from "../lang/messages/en/messages";
 
-    //Saves info from the form
+document.getElementById("signupForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    // Collect form values
     const firstName = document.getElementById("firstName").value;
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
     const confirmPassword = document.getElementById("confirmPassword").value;
 
-    //Input validation
+    // Input validation
     if (!firstName || !email || !password || !confirmPassword) {
-        alert("Please fill out all fields!");
+        alert(messages.signup.emptyFields);
         return;
     }
 
     if (password !== confirmPassword) {
-        alert("Passwords do not match!");
+        alert(messages.signup.passwordMismatch);
         return;
     }
 
-    //stores userdata in 1 object
+    // Create user data object
     const userData = { firstName, email, password };
     console.log("Sending data:", userData);  // Log data before sending
 
-    //Post request sending user data to server
     try {
         const response = await fetch("https://whale-app-2-zoykf.ondigitalocean.app/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(userData)
+            body: JSON.stringify(userData),
         });
 
         const data = await response.json();
         console.log("Response received:", data); // Log server response
 
-        //If sign up works, redirects to login
         if (response.ok) {
-            alert("Registration successful!");
+            alert(messages.signup.success);
             window.location.href = "../html/login.html";
         } else {
-            alert(data.error || "Registration failed!");
+            alert(data.error || messages.signup.failed);
         }
     } catch (error) {
         console.error("Fetch Error:", error);
-        alert("Server error. Try again later.");
+        alert(messages.login.serverError);
     }
 });
