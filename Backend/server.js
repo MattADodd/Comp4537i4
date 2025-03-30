@@ -18,6 +18,7 @@ const app = express(); // Initialize Express app
 const PORT = 3000; // Port where the server will run
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
+const nodemailer = require("nodemailer");
 
 /**
  * Swagger API Documentation configuration
@@ -446,52 +447,70 @@ app.put("/admin/update-user/:id", authenticateAdmin, async (req, res) => {
   }
 });
 
-// // **Forgot Password Route**
-// app.post("/forgot-password", async (req, res) => {
-//   const { email } = req.body;
-//   if (!email) return res.status(400).json({ error: "Email is required" });
+// **Forgot Password Route**
+app.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: "Email is required" });
 
-//   try {
-//     const [user] = await db.query("SELECT id FROM Users WHERE email = ?", [email]);
-//     if (!user) return res.status(404).json({ error: "Email not found" });
+  try {
+    const [user] = await db.query("SELECT id FROM Users WHERE email = ?", [email]);
+    if (!user) return res.status(404).json({ error: "Email not found" });
 
-//     const resetToken = crypto.randomBytes(32).toString("hex"); // Generate a random token for password reset
-//     const expiryTime = new Date(Date.now() + 15 * 60 * 1000); // Set expiry time for 15 minutes
+    const resetToken = crypto.randomBytes(32).toString("hex"); // Generate reset token
+    const expiryTime = new Date(Date.now() + 15 * 60 * 1000); // 15-minute expiry
 
-//     // Update the reset token and expiry time in the database
-//     await db.query(
-//       "UPDATE Users SET reset_token = ?, reset_token_expiry = ? WHERE email = ?",
-//       [resetToken, expiryTime, email]
-//     );
+    // Store the token and expiry in the database
+    await db.query(
+      "UPDATE Users SET reset_token = ?, reset_token_expiry = ? WHERE email = ?",
+      [resetToken, expiryTime, email]
+    );
 
-//     const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
-//     console.log(`Password reset link: ${resetLink}`); // Log the reset link (this would be sent via email in a real app)
+    const resetLink = `https://comp4537i4.vercel.app/Frontend/reset-password.html?token=${resetToken}`;
 
-//     res.json({ message: "Password reset email sent. Check console for link." });
-//   } catch (err) {
-//     res.status(500).json({ error: "Server error" });
-//   }
-// });
+    // **Send Email**
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "tdnreport@gmail.com", // Replace with your email
+        pass: "dwox lnui eyka jrxu", // Use an app password if needed
+      },
+    });
 
-// // **Reset Password Route**
-// app.post("/reset-password", async (req, res) => {
-//   const { token, newPassword } = req.body;
-//   if (!token || !newPassword) return res.status(400).json({ error: "Token and new password required" });
+    const mailOptions = {
+      from: "tdnreport@gmail.com",
+      to: email,
+      subject: "Password Reset Request",
+      text: `Click the following link to reset your password: ${resetLink}\nThis link is valid for 15 minutes.`,
+    };
 
-//   try {
-//     const [user] = await db.query("SELECT id FROM Users WHERE reset_token = ? AND reset_token_expiry > NOW()", [token]);
-//     if (!user) return res.status(400).json({ error: "Invalid or expired token" });
+    await transporter.sendMail(mailOptions);
 
-//     const hashedPassword = await bcrypt.hash(newPassword, 10); // Hash the new password
+    res.json({ message: "Password reset email sent." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
-//     // Update the user's password and clear the reset token
-//     await db.query("UPDATE Users SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE id = ?", [hashedPassword, user.id]);
+// **Reset Password Route**
+app.post("/reset-password", async (req, res) => {
+  const { token, newPassword } = req.body;
+  if (!token || !newPassword) return res.status(400).json({ error: "Token and new password required" });
 
-//     res.json({ message: "Password successfully reset" });
-//   } catch (err) {
-//     res.status(500).json({ error: "Server error" });
-//   }
-// });
+  try {
+    const [user] = await db.query("SELECT id FROM Users WHERE reset_token = ? AND reset_token_expiry > NOW()", [token]);
+    if (!user) return res.status(400).json({ error: "Invalid or expired token" });
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10); // Hash the new password
+
+    // Update the user's password and clear the reset token
+    await db.query("UPDATE Users SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE id = ?", [hashedPassword, user.id]);
+
+    res.json({ message: "Password successfully reset" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 // // **Logout Route** - Clears the cookie with the JWT token
 // app.post("/logout", (req, res) => {
