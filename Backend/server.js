@@ -262,10 +262,16 @@ app.post("/login", async (req, res) => {
 });
 
 /**
- * User Dashboard Route
- * @route GET /dashboard
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
+ * @swagger
+ * /dashboard:
+ *   get:
+ *     summary: Get user dashboard data
+ *     description: Retrieves the API call count for the logged-in user.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user API call count.
+ *       500:
+ *         description: Server error.
  */
 app.get("/dashboard", async (req, res) => {
   const token = req.cookies.token; // Get JWT token from cookies
@@ -279,11 +285,16 @@ app.get("/dashboard", async (req, res) => {
 });
 
 /**
- * Admin API Usage Data Route
- * @route GET /admin/api-data
- * @middleware authenticateAdmin
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
+ * @swagger
+ * /admin/api-data:
+ *   get:
+ *     summary: Get admin API usage data
+ *     description: Fetches API stats and user consumption data. Requires admin authentication.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user API data.
+ *       500:
+ *         description: Server error.
  */
 app.get("/admin/api-data", authenticateAdmin, async (req, res) => {
   try {
@@ -297,6 +308,18 @@ app.get("/admin/api-data", authenticateAdmin, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /admin/api-stats:
+ *   get:
+ *     summary: Get API usage statistics
+ *     description: Retrieves API usage statistics, sorted by request count. Requires admin authentication.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved API stats.
+ *       500:
+ *         description: Internal server error.
+ */
 app.get('/admin/api-stats', authenticateAdmin, async (req, res) => {
   try {
     const query = `
@@ -313,12 +336,24 @@ app.get('/admin/api-stats', authenticateAdmin, async (req, res) => {
 });
 
 /**
- * AI Response Route
- * @route GET /ai-response
- * @middleware authenticateUser
- * @param {Object} req - Express request object
- * @param {string} req.query.prompt - User's input prompt
- * @param {Object} res - Express response object
+ * @swagger
+ * /ai-response:
+ *   get:
+ *     summary: Get AI-generated response
+ *     description: Fetches AI-generated text based on user input. Requires authentication.
+ *     parameters:
+ *       - in: query
+ *         name: prompt
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successfully generated AI response.
+ *       400:
+ *         description: Prompt is required.
+ *       500:
+ *         description: AI service unavailable.
  */
 app.get("/ai-response", authenticateUser, async (req, res) => {
   const { prompt } = req.query;
@@ -360,12 +395,24 @@ app.get("/ai-response", authenticateUser, async (req, res) => {
 });
 
 /**
- * Admin Delete User Route
- * @route DELETE /admin/delete-user/:id
- * @middleware authenticateAdmin
- * @param {Object} req - Express request object
- * @param {string} req.params.id - User ID
- * @param {Object} res - Express response object
+ * @swagger
+ * /admin/delete-user/{id}:
+ *   delete:
+ *     summary: Delete a user
+ *     description: Deletes a user by ID. Requires admin authentication.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User deleted successfully.
+ *       404:
+ *         description: User not found.
+ *       500:
+ *         description: Failed to delete user.
  */
 app.delete("/admin/delete-user/:id", authenticateAdmin, async (req, res) => {
   try {
@@ -395,13 +442,41 @@ app.delete("/admin/delete-user/:id", authenticateAdmin, async (req, res) => {
 });
 
 /**
- * Admin Update User Route
- * @route PUT /admin/update-user/:id
- * @middleware authenticateAdmin
- * @param {Object} req - Express request object
- * @param {string} req.params.id - User ID
- * @param {Object} req.body - Fields to update (firstName, email, api_calls, is_admin)
- * @param {Object} res - Express response object
+ * @swagger
+ * /admin/update-user/{id}:
+ *   put:
+ *     summary: Update a user
+ *     description: Updates user details. Requires admin authentication.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               api_calls:
+ *                 type: integer
+ *               is_admin:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: User updated successfully.
+ *       400:
+ *         description: No fields to update provided.
+ *       404:
+ *         description: User not found.
+ *       500:
+ *         description: Failed to update user.
  */
 app.put("/admin/update-user/:id", authenticateAdmin, async (req, res) => {
   try {
@@ -464,7 +539,32 @@ app.put("/admin/update-user/:id", authenticateAdmin, async (req, res) => {
   }
 });
 
-// **Forgot Password Route**
+/**
+ * @swagger
+ * /forgot-password:
+ *   post:
+ *     summary: Request a password reset
+ *     description: Generates a password reset token and sends an email with a reset link.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *     responses:
+ *       200:
+ *         description: Password reset email sent.
+ *       400:
+ *         description: Email is required.
+ *       404:
+ *         description: Email not found.
+ *       500:
+ *         description: Server error.
+ */
 app.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: "Email is required" });
@@ -509,7 +609,33 @@ app.post("/forgot-password", async (req, res) => {
   }
 });
 
-// **Reset Password Route**
+/**
+ * @swagger
+ * /reset-password:
+ *   post:
+ *     summary: Reset password
+ *     description: Updates the user's password if the reset token is valid and not expired.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 example: abc123resetToken
+ *               newPassword:
+ *                 type: string
+ *                 example: NewSecurePassword123
+ *     responses:
+ *       200:
+ *         description: Password successfully reset.
+ *       400:
+ *         description: Token and new password required or invalid/expired token.
+ *       500:
+ *         description: Server error.
+ */
 app.post("/reset-password", async (req, res) => {
   const { token, newPassword } = req.body;
   if (!token || !newPassword) return res.status(400).json({ error: "Token and new password required" });
@@ -528,12 +654,6 @@ app.post("/reset-password", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-
-// // **Logout Route** - Clears the cookie with the JWT token
-// app.post("/logout", (req, res) => {
-//   res.clearCookie("token"); // Clear the token cookie
-//   res.json({ message: "Logged out successfully" });
-// });
 
 /**
  * Start the server
