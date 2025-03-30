@@ -183,13 +183,6 @@ function handleDeleteUser(user, row, button) {
   });
 }
 
-
-
-
-
-
-
-
 function showError(message) {
   const notification = document.createElement("div");
   notification.className = "fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg";
@@ -212,12 +205,9 @@ function showSuccess(message) {
   }, 5000);
 }
 
-
-
 // Function to fetch and display API stats for the admin
 function fetchApiStats() {
   
-
   fetch("https://whale-app-2-zoykf.ondigitalocean.app/admin/api-stats", {
     method: "GET",
     credentials: "include",

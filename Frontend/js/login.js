@@ -42,7 +42,6 @@ document.getElementById("forgot-password").addEventListener("click", async funct
         return;
     }
 
-    
     //Posts email to server to reset password
     try {
         const response = await fetch("https://whale-app-2-zoykf.ondigitalocean.app/forgot-password", {
@@ -50,8 +49,6 @@ document.getElementById("forgot-password").addEventListener("click", async funct
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email }),
         });
-
-        
 
         const data = await response.json();
 

@@ -12,7 +12,6 @@ document.addEventListener("DOMContentLoaded", function () {
     //Gets the token from local storage.
     document.getElementById("token").value = token; // Store token in hidden input
 
-
     document.getElementById("resetPasswordForm").addEventListener("submit", async function (event) {
         event.preventDefault(); // Prevent page reload
 

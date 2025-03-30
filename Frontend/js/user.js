@@ -52,7 +52,6 @@ function textToSpeech(text) {
     speechSynthesis.speak(utterance);
 }
 
-
 // Send a GET request to the "/dashboard" endpoint
 fetch("https://whale-app-2-zoykf.ondigitalocean.app/dashboard", {
     method: "GET",

@@ -1,7 +1,6 @@
 signupForm.addEventListener("submit", async (event) => {
     event.preventDefault(); 
 
-
     //Saves info from the form
     const firstName = document.getElementById("firstName").value;
     const email = document.getElementById("email").value;
@@ -22,7 +21,6 @@ signupForm.addEventListener("submit", async (event) => {
     //stores userdata in 1 object
     const userData = { firstName, email, password };
     console.log("Sending data:", userData);  // Log data before sending
-
 
     //Post request sending user data to server
     try {
