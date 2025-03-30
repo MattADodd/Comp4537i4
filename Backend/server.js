@@ -215,13 +215,30 @@ app.post("/register", async (req, res) => {
 });
 
 /**
- * User Login Route
- * @route POST /login
- * @param {Object} req - Express request object
- * @param {Object} req.body - Request body containing user credentials
- * @param {string} req.body.email - User's email
- * @param {string} req.body.password - User's password
- * @param {Object} res - Express response object
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: User login
+ *     description: Authenticates a user and returns a JWT token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       401:
+ *         description: Invalid credentials
  */
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
