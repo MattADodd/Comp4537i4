@@ -195,7 +195,33 @@ const authenticateAdmin = async (req, res, next) => {
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 app.use("/doc", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-// **User Registration Route**
+/**
+@swagger
+ * /register:
+ *   post:
+ *     summary: Register a new user
+ *     description: Registers a new user with first name, email, and password.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *       400:
+ *         description: Bad request, missing fields
+ *       500:
+ *         description: Server error
+ */
 app.post("/register", async (req, res) => {
   const { firstName, email, password, isAdmin } = req.body;
   if (!firstName || !email || !password) return res.status(400).json({ error: "All fields required" });
