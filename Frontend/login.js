@@ -18,7 +18,7 @@ document.querySelector("form").addEventListener("submit", async function (event)
             // Store the token in localStorage
             localStorage.setItem("token", data.token);
             alert("Login successful!");
-            window.location.href = "../html/userLanding.html"; // Redirect to dashboard for regular users
+            window.location.href = "./userLanding.html"; // Redirect to dashboard for regular users
         } else {
             alert(data.error || "Login failed!");
         }
