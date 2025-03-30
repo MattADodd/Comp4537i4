@@ -9,13 +9,16 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
+    //Gets the token from local storage.
     document.getElementById("token").value = token; // Store token in hidden input
+
 
     document.getElementById("resetPasswordForm").addEventListener("submit", async function (event) {
         event.preventDefault(); // Prevent page reload
 
         const newPassword = document.getElementById("newPassword").value;
         
+        //Post request to server to get new password.
         try {
             const response = await fetch("https://whale-app-2-zoykf.ondigitalocean.app/reset-password", {
                 method: "POST",
