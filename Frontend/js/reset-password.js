@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!token) {
         alert("Invalid password reset link.");
-        window.location.href = "./login.html"; // Redirect if no token
+        window.location.href = "../html/login.html"; // Redirect if no token
         return;
     }
 
