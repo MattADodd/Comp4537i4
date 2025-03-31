@@ -101,6 +101,9 @@ async function getResponse() {
     }
 }
 
+// Attach event listener for the button
+document.getElementById("submit-btn").addEventListener("click", getResponse);
+
 function textToSpeech(text) {
     const speechSynthesis = window.speechSynthesis;
     const utterance = new SpeechSynthesisUtterance(text);
