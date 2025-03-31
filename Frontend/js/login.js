@@ -22,7 +22,7 @@ function showLoadingModal() {
     modalContent.style.textAlign = "center";
 
     const message = document.createElement('p');
-    message.innerText = "Processing... Please wait.";
+    message.innerText = messages.apiCalls.loading;
     modalContent.appendChild(message);
     modal.appendChild(modalContent);
 

@@ -1,5 +1,61 @@
 import messages from "../lang/messages/en/messages.js";
 
+// Function to create and show the loading modal
+function showLoadingModal() {
+    const modal = document.createElement('div');
+    modal.id = "loadingModal";
+    modal.style.position = "fixed";
+    modal.style.top = "0";
+    modal.style.left = "0";
+    modal.style.width = "100%";
+    modal.style.height = "100%";
+    modal.style.backgroundColor = "rgba(0, 0, 0, 0.4)";
+    modal.style.display = "flex";
+    modal.style.justifyContent = "center";
+    modal.style.alignItems = "center";
+    modal.style.zIndex = "1000"; // Ensure it sits on top of other content
+
+    const modalContent = document.createElement('div');
+    modalContent.style.backgroundColor = "#fff";
+    modalContent.style.padding = "20px";
+    modalContent.style.borderRadius = "5px";
+    modalContent.style.textAlign = "center";
+
+    const loadingText = document.createElement('p');
+    loadingText.innerText = messages.apiCalls.loading;
+    modalContent.appendChild(loadingText);
+
+    const spinner = document.createElement('div');
+    spinner.style.border = "4px solid #f3f3f3"; /* Light grey */
+    spinner.style.borderTop = "4px solid #3498db"; /* Blue */
+    spinner.style.borderRadius = "50%";
+    spinner.style.width = "40px";
+    spinner.style.height = "40px";
+    spinner.style.animation = "spin 1s linear infinite"; // Spinner animation
+
+    modalContent.appendChild(spinner);
+    modal.appendChild(modalContent);
+
+    document.body.appendChild(modal);
+    return modal;
+}
+
+// Function to remove the loading modal
+function removeLoadingModal(modal) {
+    document.body.removeChild(modal);
+}
+
+// Function to create the spinner animation (for CSS)
+const style = document.createElement('style');
+style.innerHTML = `
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
+
+// Main function to get AI response
 async function getResponse() {
     const userPrompt = document.getElementById("prompt").value;
     if (!userPrompt) {
@@ -10,6 +66,9 @@ async function getResponse() {
     const prompt = "Please write me a short story about " + userPrompt;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 360000); // 2-minute timeout
+
+    // Show loading modal while the request is in progress
+    const modal = showLoadingModal();
 
     try {
         const response = await fetch(
@@ -36,6 +95,9 @@ async function getResponse() {
             console.error("Error fetching response:", error);
             document.getElementById("response").value = messages.aiResponse.error;
         }
+    } finally {
+        // Remove the loading modal after the request finishes
+        removeLoadingModal(modal);
     }
 }
 

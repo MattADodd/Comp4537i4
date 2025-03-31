@@ -51,6 +51,7 @@ const messages = {
     },
     apiCalls: {
         failed: "Failed to load API calls data.",
+        loading: "Loading... Please Wait",
         remaining: (callsLeft) => `API Calls Left: ${callsLeft}`
     }
 };
