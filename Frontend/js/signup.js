@@ -1,3 +1,4 @@
+// ChatGPT was used to help write some of the code
 import messages from "../lang/messages/en/messages.js";
 
 document.getElementById("signupForm").addEventListener("submit", async (event) => {

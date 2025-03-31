@@ -1,3 +1,5 @@
+// ChatGPT was used to help write some of the code
+
 /**
  * Load environment variables from .env file
  */
