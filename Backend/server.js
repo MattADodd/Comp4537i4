@@ -584,7 +584,7 @@ app.post("/forgot-password", async (req, res) => {
       [resetToken, expiryTime, email]
     );
 
-    const resetLink = `https://comp4537i4.vercel.app/Frontend/reset-password.html?token=${resetToken}`;
+    const resetLink = `https://comp4537i4.vercel.app/Frontend/html/reset-password.html?token=${resetToken}`;
 
     // **Send Email**
     const transporter = nodemailer.createTransport({
